@@ -13,10 +13,12 @@ pydantic = "^2.11.4"
 requests = "^2.32.3"
 beautifulsoup4 = "^4.13.4"
 google-genai = "^1.12.1"
+playwright = "^1.51.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+types-requests = "^2.32.0.20250328"
 
 [build-system]
 requires = ["poetry-core"]
