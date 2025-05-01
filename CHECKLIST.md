@@ -16,9 +16,9 @@
 
 ---
 
-## 2. [ ] バックエンド API 実装
+## 2. [X] バックエンド API 実装
     *   `backend/.env` ファイルに `GOOGLE_API_KEY` を設定する (gitignore 対象)。
-    *   `/api/chat` (POST) エンドポイントを実装し、Gemini API と連携して応答を返すようにする。
+    *   `/api/chat` (POST) エンドポイントを実装し、Gemini API (`google-genai`) と連携して応答を返すようにする。
     *   `/api/prompt/update` (PATCH) エンドポイントを実装し、`prompt_store` を更新できるようにする。
     *   FastAPI サーバーを起動し、HTTP クライアントで両エンドポイントの動作を確認する。
 
