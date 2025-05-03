@@ -21,13 +21,14 @@ interface ChatResponse {
     reply: string;
 }
 
+const INPUT_AREA_HEIGHT = '70px'; // Define constant for input area height
+
 const ChatWidget: React.FC = () => {
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
-  const inputAreaHeight = '70px'; // Approximate height for paddingBottom
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -87,19 +88,22 @@ const ChatWidget: React.FC = () => {
         sx={{
           width: '100%',
           height: '100%',
-          borderRadius: 0,
-          overflow: 'hidden',
-          position: 'relative',
+          position: 'relative', // Needed for absolute positioning of children
+          overflow: 'hidden',  // Clip children
           backgroundColor: 'transparent',
           boxShadow: 'none',
+          borderRadius: 0,
         }}
       >
+        {/* Message List Area - Positioned absolutely, scrolls above input */}
         <Box sx={{
-            height: '100%',
-            paddingBottom: inputAreaHeight,
-            boxSizing: 'border-box',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: INPUT_AREA_HEIGHT, // Leave space for the input area
             overflowY: 'auto',
-            p: 2,
+            p: 2, // Padding around messages
             '&::-webkit-scrollbar': { display: 'none' },
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -146,18 +150,18 @@ const ChatWidget: React.FC = () => {
           </List>
         </Box>
 
-        {/* Input Area - Absolute Position */}
+        {/* Input Area - Positioned absolutely at the bottom */}
         <Box sx={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            boxSizing: 'border-box',
+            height: INPUT_AREA_HEIGHT, // Explicit height
+            boxSizing: 'border-box',   // Include padding in height calculation
             p: 1.5,
             display: 'flex',
             alignItems: 'flex-end',
-            backgroundColor: theme.palette.chat?.inputBg,
-            borderTop: `1px solid ${theme.palette.divider}`,
+            backgroundColor: 'transparent', // Keep transparent background
         }}>
           <TextField
             variant="outlined"
