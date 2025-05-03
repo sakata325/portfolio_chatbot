@@ -40,10 +40,6 @@ if not os.path.exists(frontend_dist_path):
 
 app.mount("/assets", StaticFiles(directory=assets_dir_path), name="assets")
 
-# Mount the root of the dist directory for other files like favicon.ico
-# このマウントも frontend_dist_path を使用
-app.mount("/", StaticFiles(directory=frontend_dist_path), name="root_static") # この行はserve_frontendと競合する可能性があるため注意
-# --- Add Staticfiles and Root Route --- END
 
 # CORS Middleware configuration
 origins = [
