@@ -69,7 +69,7 @@ app.include_router(prompt.router, prefix="/api")  # Uncomment prompt router incl
 # Serve index.html for the root path and any other path not caught by
 # API or static files
 # This allows client-side routing to work correctly.
-@app.get("/{full_path:path}")
+@app.get("/{full_path:path}", response_model=None)
 async def serve_frontend(full_path: str) -> Union[FileResponse, Dict[str, str]]:
     index_path = os.path.join(frontend_dist_path, "index.html")
     # Check if the requested path corresponds to an existing static file first
