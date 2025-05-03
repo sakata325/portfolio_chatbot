@@ -23,7 +23,7 @@ const ChatWidget: React.FC = () => {
 
   // Initial message from bot
   useEffect(() => {
-    setMessages([{ id: Date.now(), text: 'こんにちは！どのような御用でしょうか？', sender: 'bot' }]);
+    setMessages([{ id: Date.now(), text: 'こんにちは！私について何でも聞いてください。', sender: 'bot' }]);
   }, []);
 
   const handleSendMessage = async () => {
@@ -78,20 +78,25 @@ const ChatWidget: React.FC = () => {
 
   return (
     <Paper
-      elevation={3}
+      elevation={0} // No shadow needed for fullscreen
       sx={{
-        position: 'fixed', // Changed from 'absolute' for better placement
-        bottom: '20px',
-        right: '20px',
-        width: '350px',
-        height: '500px',
+        width: '100%',       // Fill width
+        height: '100vh',     // Fill viewport height
+        // Remove fixed positioning and offsets
+        // position: 'fixed',
+        // bottom: '20px',
+        // right: '20px',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: 1000 // Ensure it's above other content
+        backgroundColor: 'transparent', // Let theme handle background or make fully transparent
+        overflow: 'hidden', // Prevent potential scrollbars on the main paper
       }}
     >
-      <Box sx={{ p: 2, borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
-        <Typography variant="h6">ポートフォリオ・チャットボット</Typography>
+      <Box sx={{ p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' /* Subtle border */ }}>
+        {/* Adjusted padding and removed background color */}
+        <Typography variant="h6" align="center"> {/* Centered Title */}
+          HAYATA SAKATA AI {/* Changed title? */}
+        </Typography>
       </Box>
       <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
         <List>
@@ -100,9 +105,16 @@ const ChatWidget: React.FC = () => {
               <Paper
                 elevation={1}
                 sx={{
-                  p: 1,
-                  bgcolor: msg.sender === 'user' ? 'primary.light' : 'grey.200',
-                  maxWidth: '75%',
+                  p: 1.5, // Slightly more padding
+                  maxWidth: '80%',
+                  // Glassmorphism for message bubbles
+                  bgcolor: msg.sender === 'user'
+                    ? 'rgba(255, 255, 255, 0.1)' // User message glass
+                    : 'rgba(50, 50, 50, 0.3)', // Bot message glass
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px', // Rounded corners
+                  color: 'text.primary',
                 }}
               >
                 <ListItemText primary={msg.text} />
@@ -111,12 +123,20 @@ const ChatWidget: React.FC = () => {
           ))}
            {isLoading && (
             <ListItem sx={{ justifyContent: 'center' }}>
-              <CircularProgress size={24} />
+              <CircularProgress size={24} color="inherit" />
             </ListItem>
           )}
         </List>
       </Box>
-      <Box sx={{ p: 2, borderTop: '1px solid #ccc', display: 'flex', alignItems: 'center' }}>
+      {/* Input area with Glassmorphism */}
+      <Box sx={{
+        p: 2,
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        background: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
+        backdropFilter: 'blur(10px)',
+      }}>
         <TextField
           fullWidth
           variant="outlined"
@@ -126,17 +146,47 @@ const ChatWidget: React.FC = () => {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault(); // Prevent new line on Enter
+              e.preventDefault();
               handleSendMessage();
             }
           }}
           disabled={isLoading}
+          sx={{ 
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '20px', // Rounded input field
+              // Glassmorphism for input field itself
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(5px)',
+              '& fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.2)', // Subtle border
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'rgba(255, 255, 255, 0.6)',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: 'text.primary',
+            },
+          }}
         />
         <Button
             variant="contained"
             onClick={handleSendMessage}
             disabled={isLoading || !inputValue.trim()}
-            sx={{ ml: 1 }}
+            sx={{ 
+              ml: 1, 
+              borderRadius: '20px', // Rounded button
+              bgcolor: 'rgba(255, 255, 255, 0.1)', // Glass button
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'text.primary',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.2)',
+              }
+             }}
         >
            送信
         </Button>
