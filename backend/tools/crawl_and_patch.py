@@ -6,11 +6,12 @@ from typing import List, Set
 from urllib.parse import urljoin, urlparse
 
 import requests
-from backend import prompt_config
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page, sync_playwright
+
+import prompt_config
 
 # Load environment variables from .env file in the backend directory
 # Assuming the script is run from the root or backend directory
