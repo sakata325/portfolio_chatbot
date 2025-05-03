@@ -19,6 +19,31 @@ playwright = "^1.51.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
 types-requests = "^2.32.0.20250328"
+ruff = "^0.5.5"
+mypy = "^1.11.0"
+
+# --- Ruff Configuration --- START
+[tool.ruff]
+line-length = 88 # Default black line length
+select = ["E", "F", "W", "I"] # Select common rules (Error, Pyflakes, Warning, isort)
+# ignore = [] # Add specific rules to ignore if needed
+
+[tool.ruff.lint]
+# Add specific lint configurations if needed
+
+[tool.ruff.format]
+# Add specific formatting configurations if needed
+# --- Ruff Configuration --- END
+
+# --- Mypy Configuration --- START
+[tool.mypy]
+python_version = "3.12"
+writes_types = ".mypy_cache"
+ignore_missing_imports = true # Ignore missing type hints for third-party libraries
+disallow_untyped_defs = true # Require type hints for function definitions
+warn_return_any = true # Warn about returning Any
+warn_unused_ignores = true # Warn about unused # type: ignore comments
+# --- Mypy Configuration --- END
 
 [build-system]
 requires = ["poetry-core"]
