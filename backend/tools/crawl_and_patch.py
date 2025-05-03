@@ -6,10 +6,11 @@ from typing import List, Set
 from urllib.parse import urljoin, urlparse
 
 import requests
+from backend import prompt_config
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from playwright.sync_api import Error as PlaywrightError, Page
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error as PlaywrightError
+from playwright.sync_api import Page, sync_playwright
 
 # Load environment variables from .env file in the backend directory
 # Assuming the script is run from the root or backend directory
@@ -21,15 +22,16 @@ load_dotenv(dotenv_path=os.path.join(backend_dir, ".env"))
 # Assuming prompt_config.py is in backend/
 script_dir = os.path.dirname(__file__)
 backend_dir_from_tools = os.path.dirname(script_dir)
-sys.path.insert(0, os.path.dirname(backend_dir_from_tools)) # Add project root to path temporarily
-from backend import prompt_config # Import from backend package
+sys.path.insert(0, os.path.dirname(backend_dir_from_tools))
+
 # Clean up sys.path if necessary, though usually fine for scripts
 
 API_URL = os.getenv("CHATBOT_HOST", "http://localhost:8000") + "/api/prompt/update"
 TARGET_URL = os.getenv("PORTFOLIO_URL")
 # Place hash file in the same directory as the script for simplicity
 HASH_FILE = os.path.join(os.path.dirname(__file__), "last_hash.txt")
-MAX_CRAWL_PAGES = 20 # Define max pages to crawl
+MAX_CRAWL_PAGES = 20  # Define max pages to crawl
+
 
 def is_same_domain(base_url: str, new_url: str) -> bool:
     """Checks if the new URL belongs to the same domain as the base URL."""
@@ -38,7 +40,8 @@ def is_same_domain(base_url: str, new_url: str) -> bool:
         new_domain = urlparse(new_url).netloc
         return base_domain == new_domain
     except ValueError:
-        return False # Handle potential invalid URLs
+        return False  # Handle potential invalid URLs
+
 
 def get_internal_links(page: Page, base_url: str) -> Set[str]:
     """Extracts internal links (same domain) from the page."""
@@ -46,7 +49,9 @@ def get_internal_links(page: Page, base_url: str) -> Set[str]:
     parsed_base_url = urlparse(base_url)
     base_domain = parsed_base_url.netloc
 
-    hrefs = page.eval_on_selector_all("a[href]", "elements => elements.map(el => el.href)")
+    hrefs = page.eval_on_selector_all(
+        "a[href]", "elements => elements.map(el => el.href)"
+    )  # noqa: E501
 
     for href in hrefs:
         try:
@@ -55,9 +60,11 @@ def get_internal_links(page: Page, base_url: str) -> Set[str]:
             parsed_url = urlparse(absolute_url)
 
             # Check if it's http/https, has a domain, and matches the base domain
-            if (parsed_url.scheme in ["http", "https"] and
-                parsed_url.netloc == base_domain):
-                 # Remove fragment (#...) and query parameters (?...) for simplicity
+            if (
+                parsed_url.scheme in ["http", "https"]
+                and parsed_url.netloc == base_domain
+            ):
+                # Remove fragment (#...) and query parameters (?...) for simplicity
                 clean_url = urljoin(absolute_url, parsed_url.path)
                 links.add(clean_url)
         except ValueError:
@@ -151,7 +158,7 @@ def main() -> None:
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch() # Consider headless=True for production
+            browser = p.chromium.launch()  # Consider headless=True for production
             page = browser.new_page()
 
             while urls_to_visit and pages_crawled < MAX_CRAWL_PAGES:
@@ -159,7 +166,7 @@ def main() -> None:
                 if current_url in visited_urls:
                     continue
 
-                print(f"({pages_crawled + 1}/{MAX_CRAWL_PAGES}) Visiting: {current_url}")
+                print(f"({pages_crawled + 1}/{MAX_CRAWL_PAGES}) Visit: {current_url}")
                 try:
                     page.goto(current_url, timeout=60000)
                     page.wait_for_load_state("networkidle", timeout=60000)
@@ -176,13 +183,13 @@ def main() -> None:
 
                 except PlaywrightError as e:
                     print(f"  Error visiting {current_url}: {e}", file=sys.stderr)
-                except Exception as e: # Catch other potential errors during page processing
+                except Exception as e:
                     print(f"  Unexpected error on {current_url}: {e}", file=sys.stderr)
 
             browser.close()
 
-    except Exception as e: # Catch errors during playwright startup/shutdown
-        print(f"An unexpected error occurred during Playwright operation: {e}", file=sys.stderr)
+    except Exception as e:  # Catch errors during playwright startup/shutdown
+        print(f"An unexpected error occurred: {e}", file=sys.stderr)
         sys.exit(1)
 
     if not all_html_content:
@@ -197,21 +204,13 @@ def main() -> None:
 
     # --- Text Length Check ---
     print(f"Total combined text length: {len(combined_portfolio_text)}")
-    # Optional: Add truncation or summarization if too long
-    # max_portfolio_length = 15000 # Example limit
-    # if len(combined_portfolio_text) > max_portfolio_length:
-    #     print(f"Warning: Portfolio text too long, truncating to {max_portfolio_length} chars.")
-    #     combined_portfolio_text = combined_portfolio_text[:max_portfolio_length]
-    # --- End Check ---
-
 
     print("Reading prompt template from config...")
     try:
         system_template = prompt_config.SYSTEM_PROMPT_TEMPLATE
     except AttributeError as e:
-        print(f"Error: Failed to read SYSTEM_PROMPT_TEMPLATE from prompt_config.py: {e}", file=sys.stderr)
+        print(f"Error: Failed to read SYSTEM_PROMPT_TEMPLATE: {e}", file=sys.stderr)
         sys.exit(1)
-
 
     # Calculate hash based ONLY on portfolio content now
     print("Calculating hash based on portfolio content...")
@@ -232,7 +231,6 @@ def main() -> None:
     new_prompt = system_template.format(
         portfolio_content=combined_portfolio_text.strip()
     )
-    # print(f"--- Generated Prompt (First 500 chars) ---\n{new_prompt[:500]}\n----------------------------------------") # Debug output
 
     print(f"Updating prompt via API: {API_URL}")
     if update_prompt_api(new_prompt):
@@ -242,6 +240,7 @@ def main() -> None:
     else:
         print("Prompt update failed. Hash not updated.", file=sys.stderr)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
