@@ -1,7 +1,7 @@
 import hashlib
+import importlib.util
 import os
 import sys
-import importlib.util
 from datetime import datetime
 from typing import List, Set
 from urllib.parse import urljoin, urlparse
@@ -148,15 +148,17 @@ def main() -> None:
     try:
         script_path = os.path.abspath(__file__)
         tools_dir = os.path.dirname(script_path)
-        backend_dir_dynamic = os.path.dirname(tools_dir) # Assumes tools is directly under backend
-        config_path = os.path.join(backend_dir_dynamic, 'prompt_config.py')
+        backend_dir_dynamic = os.path.dirname(
+            tools_dir
+        )  # Assumes tools is directly under backend
+        config_path = os.path.join(backend_dir_dynamic, "prompt_config.py")
 
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"prompt_config.py not found at {config_path}")
 
         spec = importlib.util.spec_from_file_location("prompt_config", config_path)
         if spec is None or spec.loader is None:
-             raise ImportError(f"Could not load spec for {config_path}")
+            raise ImportError(f"Could not load spec for {config_path}")
         prompt_config = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(prompt_config)
         print("Prompt configuration loaded successfully.")
@@ -225,7 +227,10 @@ def main() -> None:
     try:
         system_template = prompt_config.SYSTEM_PROMPT_TEMPLATE
     except AttributeError as e:
-        print(f"Error: SYSTEM_PROMPT_TEMPLATE not found in prompt_config.py: {e}", file=sys.stderr)
+        print(
+            f"Error: SYSTEM_PROMPT_TEMPLATE not found in prompt_config.py: {e}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # Calculate hash based ONLY on portfolio content now
