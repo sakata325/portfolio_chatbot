@@ -1,24 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import CircularProgress from '@mui/material/CircularProgress'; // ローディング表示用
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import ChatIcon from '@mui/icons-material/Chat';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+import Collapse from '@mui/material/Collapse';
+import { useTheme } from '@mui/material/styles';
 
-// TODO: Define message type properly
 interface Message {
   id: number;
   text: string;
   sender: 'user' | 'bot';
 }
 
+// Interface matching backend/app/models.py
+interface ChatResponse {
+    reply: string;
+}
+
 const ChatWidget: React.FC = () => {
+  const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const messagesEndRef = useRef<null | HTMLDivElement>(null); // Ref for scrolling
+
+  // Scroll to bottom when messages change or widget opens/closes
+  useEffect(() => {
+    if (isOpen) {
+        // Use setTimeout to ensure DOM updates before scrolling
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100); // Small delay might be needed for Collapse animation
+    }
+  }, [messages, isOpen]);
 
   // Initial message from bot
   useEffect(() => {
@@ -30,38 +52,32 @@ const ChatWidget: React.FC = () => {
 
     const userMessage: Message = { id: Date.now(), text: inputValue, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputValue; // Store input value before clearing
+    const currentInput = inputValue;
     setInputValue('');
     setIsLoading(true);
 
     try {
-      // API のベース URL を環境変数から取得
-      // ローカル開発時は Vite Dev Server が .env を読み込む
-      // ビルド時はビルド時の環境変数が埋め込まれる
       const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/chat`;
-
-      const response = await fetch(apiUrl, { // 環境変数から取得した URL を使用
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: currentInput }), // Use the stored input value
+        body: JSON.stringify({ message: currentInput }),
       });
 
       if (!response.ok) {
-        // Handle HTTP errors (e.g., 4xx, 5xx)
         const errorData = await response.json().catch(() => ({ detail: 'Failed to parse error response' }));
         console.error('API Error:', response.status, errorData);
         throw new Error(errorData.detail || `HTTP error ${response.status}`);
       }
 
-      const data: ChatResponse = await response.json(); // Use the ChatResponse type defined in backend
+      const data: ChatResponse = await response.json();
       const botResponse: Message = { id: Date.now() + 1, text: data.reply, sender: 'bot' };
       setMessages(prev => [...prev, botResponse]);
 
     } catch (error) {
       console.error('Error sending message:', error);
-      // Display a more informative error message to the user
       const errorMessage = error instanceof Error ? error.message : 'メッセージの送信中に不明なエラーが発生しました。';
       const errorResponse: Message = { id: Date.now() + 1, text: `エラー: ${errorMessage}`, sender: 'bot' };
       setMessages(prev => [...prev, errorResponse]);
@@ -70,139 +86,179 @@ const ChatWidget: React.FC = () => {
     }
   };
 
-  // Interface matching backend/app/models.py
-  interface ChatResponse {
-      reply: string;
-  }
-
   return (
-    <Box
-      sx={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'transparent',
-        p: 1,
-      }}
-    >
-      {/* Message List Area - Add padding-bottom */}
-      <Box sx={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          px: 1,
-          pb: 4, // *** Added padding-bottom to give space for shadow ***
-          // Hide scrollbar styles
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-          scrollbarWidth: 'none', // For Firefox
-          msOverflowStyle: 'none', // For IE/Edge
-         }}>
-        <List>
-          {messages.map((msg) => (
-            <ListItem key={msg.id} sx={{ justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
-              {/* Message Bubbles - Reverted to Dark Gradient theme */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  maxWidth: '80%',
-                  // Reverted to Dark Gradient Backgrounds
-                  background: msg.sender === 'user'
-                    // Example User Gradient (Light Grey to Darker Grey)
-                    ? 'linear-gradient(145deg,rgb(255, 255, 255),rgb(247, 250, 255))'
-                    // Example Bot Gradient (Dark Grey to Near Black)
-                    : 'linear-gradient(145deg,rgb(31, 58, 88), #212121)',
-                  // Reverted text colors
-                  color: msg.sender === 'user'
-                    ? '#000000' // User: Black text
-                    : '#FFFFFF', // Bot: White text
-                  border: 'none',
-                  borderRadius: '12px',
-                  // Keep the stronger shadow from previous edits
-                  boxShadow: '0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.15)',
-                }}
-              >
-                <ListItemText primary={msg.text} />
-              </Paper>
-            </ListItem>
-          ))}
-           {isLoading && (
-            <ListItem sx={{ justifyContent: 'center' }}>
-              <CircularProgress size={24} color="inherit" />
-            </ListItem>
-          )}
-        </List>
-      </Box>
+    <Box>
+      {/* Toggle Button - Fixed Position */}
+      <IconButton
+        onClick={() => setIsOpen(!isOpen)}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          zIndex: 1300, // Above the chat window
+          color: theme.palette.chat?.iconColor,
+          backgroundColor: theme.palette.chat?.toggleButtonBg,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          '&:hover': {
+            backgroundColor: theme.palette.chat?.toggleButtonHoverBg,
+          }
+        }}
+      >
+        {isOpen ? <CloseIcon /> : <ChatIcon />}
+      </IconButton>
 
-      {/* Input Area - Container is transparent */}
-      <Box sx={{
-        p: 1.5,
-        display: 'flex',
-        alignItems: 'center',
-        mt: 1,
-        backgroundColor: 'transparent',
-      }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="メッセージを入力..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
+      {/* Chat Window Container - Fixed Position Above Button */}
+      <Collapse in={isOpen} timeout="auto" unmountOnExit>
+        <Paper
+          elevation={0} // No elevation/shadow
+          sx={{
+            position: 'fixed',
+            bottom: 80, // Position above the button
+            right: 16,
+            width: '350px',
+            height: '500px',
+            zIndex: 1200, // Below the toggle button
+            borderRadius: '15px', // Keep border radius for clipping content if needed
+            overflow: 'hidden', // Needed for border radius clipping and containing scroll
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: 'transparent', // Transparent background
+            boxShadow: 'none', // Explicitly no shadow
           }}
-          disabled={isLoading}
-          sx={{ 
-            flexGrow: 1,
-            mr: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '20px',
-              // Off-white background for TextField
-              bgcolor: '#f5f5f5', // Very light grey
-              '& fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.15)', // Adjusted border
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.25)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.4)',
-              },
-            },
-            '& .MuiInputBase-input': {
-              color: '#000000',
-            },
-          }}
-        />
-        <Button
-            variant="contained"
-            onClick={handleSendMessage}
-            disabled={isLoading || !inputValue.trim()}
-            sx={{ 
-              borderRadius: '20px',
-              bgcolor: '#FFFFFF', // White button background
-              color: '#333333', // Dark grey text color
-              border: '1px solid rgba(0, 0, 0, 0.2)', // Visible border
-              boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
-              minWidth: 'auto',
-              px: 2.5,
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                bgcolor: '#f5f5f5', // Light grey on hover
-                boxShadow: '0 3px 6px 0 rgba(0, 0, 0, 0.15)',
-              }
-             }}
         >
-           送信
-        </Button>
-      </Box>
+          {/* Message List Area - Scrolls */}
+          <Box sx={{
+              flexGrow: 1,
+              overflowY: 'auto',
+              p: 2, // Padding inside scroll area
+              // Hide scrollbar styles
+              '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari, Edge
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE
+             }}>
+            <List sx={{ pt: 0, pb: 0 }}> {/* Remove List padding */}
+              {messages.map((msg) => (
+                <ListItem
+                    key={msg.id}
+                    sx={{
+                        justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                        px: 0, // No horizontal padding on ListItem
+                        py: 0.5 // Vertical padding between messages
+                    }}>
+                  {/* Message Bubbles */}
+                  <Paper
+                    elevation={0} // Use boxShadow for bubble shadow
+                    sx={{
+                      p: 1.5,
+                      maxWidth: '80%',
+                      // Corrected Swapped UI using Theme: User=Dark, Bot=White
+                      background: msg.sender === 'user'
+                        ? theme.palette.chat?.userBg // User: Dark grey bg from theme
+                        : theme.palette.chat?.botBg,  // Bot: White bg from theme
+                      color: msg.sender === 'user'
+                        ? theme.palette.chat?.userText // User: White text from theme
+                        : theme.palette.chat?.botText, // Bot: Black text from theme
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.15)',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    <ListItemText primary={msg.text} sx={{ m: 0 }} /> {/* Remove margin from ListItemText */}
+                  </Paper>
+                </ListItem>
+              ))}
+              {isLoading && (
+                <ListItem sx={{ justifyContent: 'flex-start', px: 0, py: 0.5 }}>
+                    {/* Loading bubble uses user style (dark grey bg, white text) */}
+                  <Paper elevation={0} sx={{ p: 1.5, background: theme.palette.chat?.userBg, color: theme.palette.chat?.userText, borderRadius: '12px', boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.15)' }}>
+                    <CircularProgress size={20} color="inherit" />
+                  </Paper>
+                </ListItem>
+              )}
+              {/* Empty div to scroll to */}
+              <div ref={messagesEndRef} />
+            </List>
+          </Box>
+
+          {/* Input Area */}
+          <Box sx={{
+            p: 1.5,
+            display: 'flex',
+            // Align items to the end of the cross axis (bottom for row direction)
+            alignItems: 'flex-end',
+            backgroundColor: 'transparent', // Transparent background
+            flexShrink: 0,
+            // No borderTop
+          }}>
+            <TextField
+              variant="outlined"
+              size="small"
+              placeholder="メッセージを入力..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              disabled={isLoading}
+              multiline
+              maxRows={3}
+              sx={{
+                flexGrow: 1,
+                mr: 1,
+                // Ensure input background is white and borders are visible
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '20px',
+                  // Use theme colors for input field
+                  backgroundColor: theme.palette.chat?.inputBg,
+                  '& fieldset': { borderColor: theme.palette.chat?.inputBorder },
+                  '&:hover fieldset': { borderColor: theme.palette.chat?.inputHoverBorder },
+                  '&.Mui-focused fieldset': { borderColor: theme.palette.chat?.inputFocusBorder },
+                },
+                // Adjust padding for multiline
+                '& .MuiInputBase-input': {
+                   // Use theme color for input text
+                  color: theme.palette.chat?.inputText,
+                  // py: '8.5px', // Remove explicit padding to try default alignment
+                },
+               }}
+            />
+            <IconButton
+              onClick={handleSendMessage}
+              disabled={isLoading || !inputValue.trim()}
+              sx={{
+                // Send button uses toggle button colors (normal/hover) from theme
+                bgcolor: theme.palette.chat?.toggleButtonBg, // Use toggle button color
+                color: theme.palette.chat?.iconColor,    // Use general icon color
+                border: 'none',
+                boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
+                '&:hover': {
+                  bgcolor: theme.palette.chat?.toggleButtonHoverBg, // Use toggle button hover color
+                },
+                // Keep specific disabled style from theme
+                '&.Mui-disabled': {
+                    backgroundColor: theme.palette.chat?.sendButtonDisabledBg,
+                    color: theme.palette.chat?.sendButtonDisabledIcon
+                },
+                width: 40,
+                height: 40,
+                flexShrink: 0,
+                // No alignSelf needed if parent uses alignItems: 'flex-end'
+              }}
+            >
+               <SendIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Paper>
+      </Collapse>
     </Box>
   );
 };
 
-export default ChatWidget; 
+export default ChatWidget;
+
+
+
