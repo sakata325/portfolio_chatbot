@@ -23,13 +23,15 @@ jobs:
           poetry config virtualenvs.create false --local
 
       - name: Install dependencies (including Playwright browsers)
+        working-directory: ./backend
         run: |
           poetry install
           poetry run playwright install --with-deps chromium # Install browser & OS dependencies
 
       - name: Run crawl and patch script
+        working-directory: ./backend
         env:
           PORTFOLIO_URL: ${{ secrets.PORTFOLIO_URL }} # From GitHub Secrets
           CHATBOT_HOST: ${{ secrets.CHATBOT_HOST }}   # From GitHub Secrets
           # GOOGLE_API_KEY is not directly needed by the script itself
-        run: poetry run python backend/tools/crawl_and_patch.py 
+        run: poetry run python tools/crawl_and_patch.py 

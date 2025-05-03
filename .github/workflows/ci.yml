@@ -24,10 +24,13 @@ jobs:
         poetry config virtualenvs.create false --local
 
     - name: Install dependencies
+      working-directory: ./backend
       run: poetry install --no-root
 
     - name: Lint with Ruff
+      working-directory: ./backend
       run: poetry run ruff check .
 
     - name: Type check with Mypy
+      working-directory: ./backend
       run: poetry run mypy . 
