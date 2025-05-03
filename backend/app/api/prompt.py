@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from ..models import PromptUpdate # Use relative import
+from ..models import PromptUpdate, PromptResponse # 追加: PromptResponse をインポート
 from ..prompt_store import prompt_store # Use relative import
 
 router = APIRouter()
@@ -16,3 +16,13 @@ async def update_prompt(p: PromptUpdate):
     except Exception as e:
         print(f"Error updating prompt: {e}")
         raise HTTPException(status_code=500, detail="Internal server error updating prompt.")
+
+@router.get("/prompt/current", response_model=PromptResponse)
+async def get_current_prompt():
+    """Returns the currently active system prompt."""
+    try:
+        current_prompt = prompt_store.current
+        return PromptResponse(prompt=current_prompt)
+    except Exception as e:
+        print(f"Error retrieving current prompt: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error retrieving prompt.")

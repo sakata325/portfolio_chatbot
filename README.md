@@ -41,4 +41,10 @@ The application is automatically deployed to Render from the `main` branch.
 
 *   **Deployed URL:** [Insert Deployed URL Here - if available]
 
+## System Prompt Management
+
+*   **Automatic Update:** The system prompt is automatically updated daily by a GitHub Actions workflow (`.github/workflows/update_prompt.yml`) which crawls the portfolio site defined by the `PORTFOLIO_URL` secret.
+*   **Manual Update:** You can manually trigger the update workflow via the GitHub Actions tab in the repository.
+*   **Check Current Prompt:** You can retrieve the currently active system prompt by sending a GET request to the `/api/prompt/current` endpoint.
+
 See `document.md` for more architectural details. 

@@ -12,6 +12,9 @@ class ChatResponse(BaseModel):
 class PromptUpdate(BaseModel):
     text: str
 
+class PromptResponse(BaseModel):
+    prompt: str
+
 class PromptRecord(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     prompt_text: str
