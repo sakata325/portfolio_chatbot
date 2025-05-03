@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import APIRouter, HTTPException
 
 from ..models import PromptResponse, PromptUpdate
@@ -7,7 +9,7 @@ router = APIRouter()
 
 
 @router.patch("/prompt/update", status_code=200)
-async def update_prompt(p: PromptUpdate):
+async def update_prompt(p: PromptUpdate) -> Dict[str, str]:
     if not p.text or not p.text.strip():  # Check if text is empty or only whitespace
         raise HTTPException(status_code=400, detail="Prompt text cannot be empty.")
 
@@ -26,7 +28,7 @@ async def update_prompt(p: PromptUpdate):
 
 
 @router.get("/prompt/current", response_model=PromptResponse)
-async def get_current_prompt():
+async def get_current_prompt() -> PromptResponse:
     """Returns the currently active system prompt."""
     try:
         current_prompt = prompt_store.current

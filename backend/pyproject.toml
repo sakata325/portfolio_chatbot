@@ -25,10 +25,10 @@ mypy = "^1.11.0"
 # --- Ruff Configuration --- START
 [tool.ruff]
 line-length = 88 # Default black line length
-select = ["E", "F", "W", "I"] # Select common rules (Error, Pyflakes, Warning, isort)
 # ignore = [] # Add specific rules to ignore if needed
 
 [tool.ruff.lint]
+select = ["E", "F", "W", "I"] # Select common rules (Error, Pyflakes, Warning, isort)
 # Add specific lint configurations if needed
 
 [tool.ruff.format]
@@ -38,7 +38,7 @@ select = ["E", "F", "W", "I"] # Select common rules (Error, Pyflakes, Warning, i
 # --- Mypy Configuration --- START
 [tool.mypy]
 python_version = "3.12"
-writes_types = ".mypy_cache"
+cache_dir = ".mypy_cache"
 ignore_missing_imports = true # Ignore missing type hints for third-party libraries
 disallow_untyped_defs = true # Require type hints for function definitions
 warn_return_any = true # Warn about returning Any

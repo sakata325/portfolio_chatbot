@@ -1,4 +1,5 @@
 import os
+from typing import Dict, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -69,7 +70,7 @@ app.include_router(prompt.router, prefix="/api")  # Uncomment prompt router incl
 # API or static files
 # This allows client-side routing to work correctly.
 @app.get("/{full_path:path}")
-async def serve_frontend(full_path: str):
+async def serve_frontend(full_path: str) -> Union[FileResponse, Dict[str, str]]:
     index_path = os.path.join(frontend_dist_path, "index.html")
     # Check if the requested path corresponds to an existing static file first
     # If not, or if it's the root path, serve index.html

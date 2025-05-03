@@ -82,7 +82,7 @@ def update_prompt_api(prompt_text: str) -> bool:
         return False
 
 
-def save_hash(new_hash: str):
+def save_hash(new_hash: str) -> None:
     """Saves the new hash to the file."""
     try:
         with open(HASH_FILE, "w", encoding="utf-8") as f:
@@ -91,7 +91,7 @@ def save_hash(new_hash: str):
         print(f"Error writing hash file ({HASH_FILE}): {e}", file=sys.stderr)
 
 
-def main():
+def main() -> None:
     """Main function to crawl, compare hash, and update prompt via API."""
     if not TARGET_URL:
         print("Error: PORTFOLIO_URL environment variable is not set.", file=sys.stderr)

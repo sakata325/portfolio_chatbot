@@ -21,7 +21,7 @@ except Exception as e:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(req: ChatRequest):
+async def chat_endpoint(req: ChatRequest) -> ChatResponse:
     if client is None:
         raise HTTPException(
             status_code=503,
