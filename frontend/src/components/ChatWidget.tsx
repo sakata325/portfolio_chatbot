@@ -21,8 +21,6 @@ interface ChatResponse {
     reply: string;
 }
 
-const INPUT_AREA_HEIGHT = '70px'; // Define constant for input area height
-
 const ChatWidget: React.FC = () => {
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -88,22 +86,18 @@ const ChatWidget: React.FC = () => {
         sx={{
           width: '100%',
           height: '100%',
-          position: 'relative', // Needed for absolute positioning of children
-          overflow: 'hidden',  // Clip children
+          borderRadius: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
           backgroundColor: 'transparent',
           boxShadow: 'none',
-          borderRadius: 0,
         }}
       >
-        {/* Message List Area - Positioned absolutely, scrolls above input */}
         <Box sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: INPUT_AREA_HEIGHT, // Leave space for the input area
+            flexGrow: 1,
             overflowY: 'auto',
-            p: 2, // Padding around messages
+            p: 2,
             '&::-webkit-scrollbar': { display: 'none' },
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -150,18 +144,13 @@ const ChatWidget: React.FC = () => {
           </List>
         </Box>
 
-        {/* Input Area - Positioned absolutely at the bottom */}
+        {/* Input Area - Flex Shrink */}
         <Box sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: INPUT_AREA_HEIGHT, // Explicit height
-            boxSizing: 'border-box',   // Include padding in height calculation
+            flexShrink: 0,
             p: 1.5,
             display: 'flex',
             alignItems: 'flex-end',
-            backgroundColor: 'transparent', // Keep transparent background
+            backgroundColor: 'transparent',
         }}>
           <TextField
             variant="outlined"
