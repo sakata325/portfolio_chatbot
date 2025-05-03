@@ -46,6 +46,7 @@ origins = [
     "http://localhost:5173", # Vite default dev port
     "http://127.0.0.1:5173",
     # Add other origins if needed (e.g., your deployed frontend URL)
+    "https://hayatasakataportfolio.studio.site", # STUDIOサイトのオリジン
 ]
 
 app.add_middleware(
