@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies (including Playwright browsers)
         working-directory: ./backend
         run: |
-          poetry install
+          poetry install --no-root
           poetry run playwright install --with-deps chromium # Install browser & OS dependencies
 
       - name: Run crawl and patch script

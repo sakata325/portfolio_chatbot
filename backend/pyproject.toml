@@ -45,6 +45,13 @@ warn_return_any = true # Warn about returning Any
 warn_unused_ignores = true # Warn about unused # type: ignore comments
 # --- Mypy Configuration --- END
 
+# --- Add Scripts --- START
+[tool.poetry.scripts]
+lint = "ruff check ."
+format = "ruff format ."
+typecheck = "mypy ."
+# --- Add Scripts --- END
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

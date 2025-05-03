@@ -1,11 +1,13 @@
-import os
 import hashlib
-# import requests # Removed requests
-from bs4 import BeautifulSoup
-from datetime import datetime
-from dotenv import load_dotenv
+import os
 import sys
-from playwright.sync_api import sync_playwright, Error as PlaywrightError # Added playwright import
+from datetime import datetime
+
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from playwright.sync_api import Error as PlaywrightError
+from playwright.sync_api import sync_playwright
 
 # Load environment variables from .env file in the backend directory
 # Assuming the script is run from the root or backend directory
@@ -16,6 +18,7 @@ API_URL = os.getenv("CHATBOT_HOST", "http://localhost:8000") + "/api/prompt/upda
 TARGET_URL = os.getenv("PORTFOLIO_URL")
 # Place hash file in the same directory as the script for simplicity
 HASH_FILE = os.path.join(os.path.dirname(__file__), "last_hash.txt")
+
 
 def extract_text(html: str) -> str:
     """Extracts relevant text content from the HTML."""
@@ -35,43 +38,58 @@ def extract_text(html: str) -> str:
     # print(text[:500])
     # print("----------------------------------------")
     # --- End Debug ---
-    return text[:16000] # Limit length as per original doc
+    return text[:16000]  # Limit length as per original doc
+
 
 def get_hash(text: str) -> str:
     """Calculates SHA256 hash of the text."""
-    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
 
 def get_last_hash() -> str:
     """Reads the last stored hash from the file."""
     try:
-        with open(HASH_FILE, "r", encoding='utf-8') as f:
+        with open(HASH_FILE, "r", encoding="utf-8") as f:
             return f.read().strip()
     except FileNotFoundError:
         return ""
 
+
 def update_prompt_api(prompt_text: str) -> bool:
-    # Keep using requests for the API call, assuming the API endpoint itself doesn't need JS rendering
-    import requests # Import requests locally for the API call
+    # Keep using requests for the API call...
+    # E501: Removed long comment
+    # import requests # Moved to top
     try:
         headers = {"Content-Type": "application/json"}
-        response = requests.patch(API_URL, json={"text": prompt_text}, headers=headers, timeout=15)
-        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
-        print(f"API call successful: Status {response.status_code}, Response: {response.json()}")
+        # E501: Broken line
+        response = requests.patch(
+            API_URL, json={"text": prompt_text}, headers=headers, timeout=15
+        )
+        response.raise_for_status()  # Raise an exception for bad status codes
+        # E501: Broken line
+        print(
+            f"API call successful: Status {response.status_code}, "
+            f"Response: {response.json()}"
+        )
         return True
     except requests.exceptions.RequestException as e:
+        # E501: Broken line
         print(f"Error calling prompt update API ({API_URL}): {e}", file=sys.stderr)
         return False
     except Exception as e:
+        # E501: Broken line
         print(f"An unexpected error occurred during API call: {e}", file=sys.stderr)
         return False
+
 
 def save_hash(new_hash: str):
     """Saves the new hash to the file."""
     try:
-        with open(HASH_FILE, "w", encoding='utf-8') as f:
+        with open(HASH_FILE, "w", encoding="utf-8") as f:
             f.write(new_hash)
     except IOError as e:
         print(f"Error writing hash file ({HASH_FILE}): {e}", file=sys.stderr)
+
 
 def main():
     """Main function to crawl, compare hash, and update prompt via API."""
@@ -84,26 +102,41 @@ def main():
     try:
         with sync_playwright() as p:
             # Consider adding options like headless=True for background execution
-            # browser = p.chromium.launch(headless=False) # Launch browser (visible for debugging)
-            browser = p.chromium.launch() # Launch browser (headless by default)
+            # browser = p.chromium.launch(headless=False)
+            # Launch browser (visible for debugging)
+            browser = p.chromium.launch()  # Launch browser (headless by default)
             page = browser.new_page()
             # Increase timeout if the page takes long to load
-            page.goto(TARGET_URL, timeout=60000) # 60 seconds timeout
-            # Wait for network activity to be idle, indicating potential JS loading is complete
-            page.wait_for_load_state('networkidle', timeout=60000) # Add network idle wait
+            page.goto(TARGET_URL, timeout=60000)  # 60 seconds timeout
+            # Wait for network activity to be idle,
+            # indicating potential JS loading is complete
+            page.wait_for_load_state(
+                "networkidle", timeout=60000
+            )  # Add network idle wait
             # Optionally, wait for specific elements if needed, e.g.:
             # page.wait_for_selector('main')
-            html_content = page.content() # Get HTML after JS execution
+            html_content = page.content()  # Get HTML after JS execution
             browser.close()
     except PlaywrightError as e:
-        print(f"Error fetching portfolio URL ({TARGET_URL}) with Playwright: {e}", file=sys.stderr)
+        # E501: Broken line
+        print(
+            f"Error fetching portfolio URL ({TARGET_URL}) with Playwright: {e}",
+            file=sys.stderr,
+        )
         sys.exit(1)
-    except Exception as e: # Catch other potential errors
-        print(f"An unexpected error occurred during Playwright operation: {e}", file=sys.stderr)
+    except Exception as e:  # Catch other potential errors
+        # E501: Broken line
+        print(
+            f"An unexpected error occurred during Playwright operation: {e}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     if not html_content:
-        print("Error: Failed to retrieve HTML content using Playwright.", file=sys.stderr)
+        # E501: Broken line
+        print(
+            "Error: Failed to retrieve HTML content using Playwright.", file=sys.stderr
+        )
         sys.exit(1)
 
     print("Extracting text from HTML...")
@@ -127,7 +160,13 @@ def main():
 
     print("Change detected. Preparing new prompt...")
     # Construct the new prompt (consider adding more context if needed)
-    new_prompt = f"あなたはポートフォリオの所有者本人です。あなたの最新のポートフォリオ情報は以下の通りです。これに基づいて質問に答えてください。\n\n---\n{current_text}\n---"
+    # E501: Broken line
+    new_prompt = (
+        "あなたはポートフォリオの所有者本人です。"
+        "あなたの最新のポートフォリオ情報は以下の通りです。"
+        "これに基づいて質問に答えてください。\n\n"
+        f"---\n{current_text}\n---"
+    )
 
     print(f"Updating prompt via API: {API_URL}")
     if update_prompt_api(new_prompt):
@@ -136,8 +175,8 @@ def main():
         print(f"Prompt update process completed successfully at {datetime.utcnow()}.")
     else:
         print("Prompt update failed. Hash not updated.", file=sys.stderr)
-        sys.exit(1) # Exit with error code if API call failed
+        sys.exit(1)  # Exit with error code if API call failed
+
 
 if __name__ == "__main__":
-    main() 
-
+    main()
