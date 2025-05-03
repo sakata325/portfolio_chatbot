@@ -27,6 +27,7 @@ const ChatWidget: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const inputAreaHeight = '70px'; // Approximate height for paddingBottom
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -88,14 +89,15 @@ const ChatWidget: React.FC = () => {
           height: '100%',
           borderRadius: 0,
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          position: 'relative',
           backgroundColor: 'transparent',
           boxShadow: 'none',
         }}
       >
         <Box sx={{
-            flexGrow: 1,
+            height: '100%',
+            paddingBottom: inputAreaHeight,
+            boxSizing: 'border-box',
             overflowY: 'auto',
             p: 2,
             '&::-webkit-scrollbar': { display: 'none' },
@@ -144,13 +146,18 @@ const ChatWidget: React.FC = () => {
           </List>
         </Box>
 
-        {/* Input Area */}
+        {/* Input Area - Absolute Position */}
         <Box sx={{
-          p: 1.5,
-          display: 'flex',
-          alignItems: 'flex-end',
-          backgroundColor: 'transparent',
-          flexShrink: 0,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            boxSizing: 'border-box',
+            p: 1.5,
+            display: 'flex',
+            alignItems: 'flex-end',
+            backgroundColor: theme.palette.chat?.inputBg,
+            borderTop: `1px solid ${theme.palette.divider}`,
         }}>
           <TextField
             variant="outlined"
@@ -199,7 +206,6 @@ const ChatWidget: React.FC = () => {
               },
               width: 40,
               height: 40,
-              flexShrink: 0,
             }}
           >
              <SendIcon fontSize="small" />
