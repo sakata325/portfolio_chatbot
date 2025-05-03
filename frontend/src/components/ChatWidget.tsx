@@ -36,7 +36,12 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat', { // Assuming backend runs on port 8000
+      // API のベース URL を環境変数から取得
+      // ローカル開発時は Vite Dev Server が .env を読み込む
+      // ビルド時はビルド時の環境変数が埋め込まれる
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/chat`;
+
+      const response = await fetch(apiUrl, { // 環境変数から取得した URL を使用
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
