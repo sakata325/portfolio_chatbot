@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page, sync_playwright
 
-import prompt_config
+from prompt_config import SYSTEM_PROMPT_TEMPLATE
 
 # Load environment variables from .env file in the backend directory
 # Assuming the script is run from the root or backend directory
@@ -208,7 +208,7 @@ def main() -> None:
 
     print("Reading prompt template from config...")
     try:
-        system_template = prompt_config.SYSTEM_PROMPT_TEMPLATE
+        system_template = SYSTEM_PROMPT_TEMPLATE
     except AttributeError as e:
         print(f"Error: Failed to read SYSTEM_PROMPT_TEMPLATE: {e}", file=sys.stderr)
         sys.exit(1)
