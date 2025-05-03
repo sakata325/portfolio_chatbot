@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import List from '@mui/material/List';
@@ -77,44 +76,52 @@ const ChatWidget: React.FC = () => {
   }
 
   return (
-    <Paper
-      elevation={0} // No shadow needed for fullscreen
+    <Box
       sx={{
-        width: '100%',       // Fill width
-        height: '100vh',     // Fill viewport height
-        // Remove fixed positioning and offsets
-        // position: 'fixed',
-        // bottom: '20px',
-        // right: '20px',
+        width: '100%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'transparent', // Let theme handle background or make fully transparent
-        overflow: 'hidden', // Prevent potential scrollbars on the main paper
+        backgroundColor: 'transparent',
+        p: 1,
       }}
     >
-      <Box sx={{ p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' /* Subtle border */ }}>
-        {/* Adjusted padding and removed background color */}
-        <Typography variant="h6" align="center"> {/* Centered Title */}
-          HAYATA SAKATA AI {/* Changed title? */}
-        </Typography>
-      </Box>
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+      {/* Message List Area - Add padding-bottom */}
+      <Box sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          px: 1,
+          pb: 4, // *** Added padding-bottom to give space for shadow ***
+          // Hide scrollbar styles
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+          scrollbarWidth: 'none', // For Firefox
+          msOverflowStyle: 'none', // For IE/Edge
+         }}>
         <List>
           {messages.map((msg) => (
             <ListItem key={msg.id} sx={{ justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
+              {/* Message Bubbles - Reverted to Dark Gradient theme */}
               <Paper
-                elevation={1}
+                elevation={0}
                 sx={{
-                  p: 1.5, // Slightly more padding
+                  p: 1.5,
                   maxWidth: '80%',
-                  // Glassmorphism for message bubbles
-                  bgcolor: msg.sender === 'user'
-                    ? 'rgba(255, 255, 255, 0.1)' // User message glass
-                    : 'rgba(50, 50, 50, 0.3)', // Bot message glass
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '10px', // Rounded corners
-                  color: 'text.primary',
+                  // Reverted to Dark Gradient Backgrounds
+                  background: msg.sender === 'user'
+                    // Example User Gradient (Light Grey to Darker Grey)
+                    ? 'linear-gradient(145deg,rgb(255, 255, 255),rgb(247, 250, 255))'
+                    // Example Bot Gradient (Dark Grey to Near Black)
+                    : 'linear-gradient(145deg,rgb(31, 58, 88), #212121)',
+                  // Reverted text colors
+                  color: msg.sender === 'user'
+                    ? '#000000' // User: Black text
+                    : '#FFFFFF', // Bot: White text
+                  border: 'none',
+                  borderRadius: '12px',
+                  // Keep the stronger shadow from previous edits
+                  boxShadow: '0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.15)',
                 }}
               >
                 <ListItemText primary={msg.text} />
@@ -128,17 +135,16 @@ const ChatWidget: React.FC = () => {
           )}
         </List>
       </Box>
-      {/* Input area with Glassmorphism */}
+
+      {/* Input Area - Container is transparent */}
       <Box sx={{
-        p: 2,
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        p: 1.5,
         display: 'flex',
         alignItems: 'center',
-        background: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
-        backdropFilter: 'blur(10px)',
+        mt: 1,
+        backgroundColor: 'transparent',
       }}>
         <TextField
-          fullWidth
           variant="outlined"
           size="small"
           placeholder="メッセージを入力..."
@@ -152,23 +158,24 @@ const ChatWidget: React.FC = () => {
           }}
           disabled={isLoading}
           sx={{ 
+            flexGrow: 1,
+            mr: 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '20px', // Rounded input field
-              // Glassmorphism for input field itself
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(5px)',
+              borderRadius: '20px',
+              // Off-white background for TextField
+              bgcolor: '#f5f5f5', // Very light grey
               '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.2)', // Subtle border
+                borderColor: 'rgba(0, 0, 0, 0.15)', // Adjusted border
               },
               '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.4)',
+                borderColor: 'rgba(0, 0, 0, 0.25)',
               },
               '&.Mui-focused fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.6)',
+                borderColor: 'rgba(0, 0, 0, 0.4)',
               },
             },
             '& .MuiInputBase-input': {
-              color: 'text.primary',
+              color: '#000000',
             },
           }}
         />
@@ -177,21 +184,24 @@ const ChatWidget: React.FC = () => {
             onClick={handleSendMessage}
             disabled={isLoading || !inputValue.trim()}
             sx={{ 
-              ml: 1, 
-              borderRadius: '20px', // Rounded button
-              bgcolor: 'rgba(255, 255, 255, 0.1)', // Glass button
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'text.primary',
+              borderRadius: '20px',
+              bgcolor: '#FFFFFF', // White button background
+              color: '#333333', // Dark grey text color
+              border: '1px solid rgba(0, 0, 0, 0.2)', // Visible border
+              boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
+              minWidth: 'auto',
+              px: 2.5,
+              whiteSpace: 'nowrap',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.2)',
+                bgcolor: '#f5f5f5', // Light grey on hover
+                boxShadow: '0 3px 6px 0 rgba(0, 0, 0, 0.15)',
               }
              }}
         >
            送信
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 
