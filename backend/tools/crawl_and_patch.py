@@ -1,6 +1,7 @@
 import hashlib
 import os
 import sys
+import importlib.util
 from datetime import datetime
 from typing import List, Set
 from urllib.parse import urljoin, urlparse
@@ -11,19 +12,10 @@ from dotenv import load_dotenv
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page, sync_playwright
 
-from prompt_config import SYSTEM_PROMPT_TEMPLATE
-
 # Load environment variables from .env file in the backend directory
 # Assuming the script is run from the root or backend directory
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(dotenv_path=os.path.join(backend_dir, ".env"))
-
-# Added import for prompt config
-# Make sure the path is correct relative to this file's location (tools/)
-# Assuming prompt_config.py is in backend/
-script_dir = os.path.dirname(__file__)
-backend_dir_from_tools = os.path.dirname(script_dir)
-sys.path.insert(0, os.path.dirname(backend_dir_from_tools))
 
 # Clean up sys.path if necessary, though usually fine for scripts
 
@@ -151,6 +143,29 @@ def main() -> None:
         print("Error: PORTFOLIO_URL environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
+    # --- Dynamically load prompt_config --- START
+    print("Locating prompt configuration...")
+    try:
+        script_path = os.path.abspath(__file__)
+        tools_dir = os.path.dirname(script_path)
+        backend_dir_dynamic = os.path.dirname(tools_dir) # Assumes tools is directly under backend
+        config_path = os.path.join(backend_dir_dynamic, 'prompt_config.py')
+
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"prompt_config.py not found at {config_path}")
+
+        spec = importlib.util.spec_from_file_location("prompt_config", config_path)
+        if spec is None or spec.loader is None:
+             raise ImportError(f"Could not load spec for {config_path}")
+        prompt_config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(prompt_config)
+        print("Prompt configuration loaded successfully.")
+
+    except Exception as e:
+        print(f"Error loading prompt_config.py: {e}", file=sys.stderr)
+        sys.exit(1)
+    # --- Dynamically load prompt_config --- END
+
     print("Starting crawl process...")
     urls_to_visit: Set[str] = {TARGET_URL}
     visited_urls: Set[str] = set()
@@ -206,11 +221,11 @@ def main() -> None:
     # --- Text Length Check ---
     print(f"Total combined text length: {len(combined_portfolio_text)}")
 
-    print("Reading prompt template from config...")
+    print("Reading prompt template from loaded config...")
     try:
-        system_template = SYSTEM_PROMPT_TEMPLATE
+        system_template = prompt_config.SYSTEM_PROMPT_TEMPLATE
     except AttributeError as e:
-        print(f"Error: Failed to read SYSTEM_PROMPT_TEMPLATE: {e}", file=sys.stderr)
+        print(f"Error: SYSTEM_PROMPT_TEMPLATE not found in prompt_config.py: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Calculate hash based ONLY on portfolio content now
