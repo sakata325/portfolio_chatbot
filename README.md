@@ -6,17 +6,97 @@ The chatbot is embedded as an iframe and keeps its knowledge up-to-date by perio
 ## Features
 
 *   **iframe Embedding:** Easily embed the chatbot into a STUDIO site.
-*   **Automatic Updates:** Regularly crawls the portfolio site, detects changes, generates a new system prompt, and updates the chatbot automatically. (Crawling tool under development)
+*   **Automatic Updates:** Regularly crawls the portfolio site, detects changes, generates a new system prompt, and updates the chatbot automatically via GitHub Actions.
 *   **Always Up-to-Date:** Ensures the chatbot always interacts based on the latest portfolio information.
 
 ## Tech Stack
 
-*   **Frontend:** Vite (React + TypeScript) + MUI
-*   **Backend:** Python 3.12, FastAPI, Pydantic, Uvicorn
-*   **LLM API Client:** `google-genai` (Gemini)
-*   **Crawling/Prompt Update:** Python + Playwright (under consideration)
-*   **CI/CD:** GitHub Actions (CI), Render (Deployment)
-*   **Dependency Management:** Poetry (Backend), npm (Frontend)
+*   **Frontend:** Vite, React, TypeScript, MUI, Emotion (Served by Backend)
+*   **Backend:** Python 3.12, FastAPI, Pydantic, Uvicorn, Playwright, BeautifulSoup4, google-genai
+*   **Dependency Management:** npm (Frontend), Poetry (Backend)
+*   **Testing & Linting:** Ruff, Mypy, Pytest (Backend), ESLint (Frontend)
+*   **CI/CD:** GitHub Actions
+*   **Deployment:** Render (Hosting both Frontend and Backend)
+
+## Architecture
+
+```mermaid
+graph TD
+    %% ─────────────── User ───────────────
+    subgraph User_Browser["User Browser"]
+        U[User]
+    end
+
+    %% ─────────── Render Deployment ───────────
+    subgraph Render_Deployment["Render Deployment"]
+        direction TB
+
+        %% Frontend
+        subgraph Frontend_Served["Frontend (served by backend)"]
+            direction LR
+            FV["Vite Build<br/>(React + TS + MUI)"]
+            F_NPM[npm]
+        end
+
+        %% Backend
+        subgraph Backend_Render["Backend (FastAPI)"]
+            direction LR
+            B_API["App<br/>(Python 3.12)"]
+            B_PS[("Prompt Store<br/>Memory")]
+            B_GAI["Gemini Client<br/>(google‑genai)"]
+            B_PO["Poetry"]
+            B_TOOL["Crawl Tool<br/>(Playwright)"]
+        end
+
+        %% internal link
+        FV -- "Served by" --> B_API
+    end
+
+    %% ───────────── CI / CD ─────────────
+    subgraph CI_CD_GitHub["CI/CD (GitHub Actions)"]
+        direction LR
+        CI["ci.yml<br/>(Lint, Test)"]
+        CD_UP["update_prompt.yml<br/>(Daily Crawl)"]
+        Secrets["Secrets<br/>(PORTFOLIO_URL, CHATBOT_HOST)"]
+    end
+
+    %% ─────────── External Services ───────────
+    subgraph External_Services["External Services"]
+        ES_G["Google Gemini API"]
+        ES_P["Portfolio Site<br/>(STUDIO)"]
+    end
+
+    %% ────────────── Edges ──────────────
+    U --> FV
+    FV -- "/api/chat request" --> B_API
+    B_API -- "Get prompt" --> B_PS
+    B_API -- "Call API" --> B_GAI
+    B_GAI -- "Access" --> ES_G
+    B_API -- "Return response" --> FV
+
+    CD_UP -- "Run" --> B_TOOL
+    B_TOOL -- "Fetch content" --> ES_P
+    B_TOOL -- "Update prompt<br/>(via CHATBOT_HOST)" --> B_API
+    B_API -- "Update prompt" --> B_PS
+    CD_UP -- "Use" --> Secrets
+```
+
+**Key Flows:**
+
+1.  **Chat Interaction:**
+    *   User accesses the application URL (hosted on Render).
+    *   Render serves the React frontend (static files built by Vite).
+    *   Frontend sends requests to the `/api/chat` endpoint of the same Render service (FastAPI backend).
+    *   Backend retrieves the current prompt from the in-memory Prompt Store, calls the Google Gemini API, and returns the response.
+2.  **Prompt Auto-Update:**
+    *   The `update_prompt.yml` GitHub Actions workflow runs daily (or manually triggered).
+    *   It checks out the code, installs dependencies (including Playwright), and runs the `backend/tools/crawl_and_patch.py` script.
+    *   The script fetches content from the Portfolio Site (URL from `PORTFOLIO_URL` secret).
+    *   If changes are detected, it sends an update request to the `/api/prompt/update` endpoint of the deployed backend (URL from `CHATBOT_HOST` secret, pointing to the Render service).
+    *   The backend updates the in-memory Prompt Store.
+3.  **CI Checks:**
+    *   The `ci.yml` GitHub Actions workflow runs on pushes and pull requests to the `main` branch.
+    *   It performs linting (Ruff) and type checking (Mypy) for the backend code.
 
 ## Local Development
 
@@ -25,26 +105,25 @@ The chatbot is embedded as an iframe and keeps its knowledge up-to-date by perio
     git clone <repository-url>
     cd portfolio_chatbot
     ```
-2.  **Backend Setup:**
+2.  **Build Frontend (Optional but recommended for backend serving):**
+    *   Navigate to the frontend directory: `cd frontend`
+    *   Install dependencies: `npm install`
+    *   Build static files: `npm run build` (Output will be in `frontend/dist`)
+    *   Navigate back to root: `cd ..`
+3.  **Backend Setup & Run:**
     *   Navigate to the backend directory: `cd backend`
-    *   Create a `.env` file based on `.env.example` and set your `GOOGLE_API_KEY`.
+    *   Create a `.env` file based on `.env.example` and set `GOOGLE_API_KEY` and optionally `PORTFOLIO_URL`, `CHATBOT_HOST` (for local testing of the crawl script).
     *   Install dependencies: `poetry install`
     *   Run the backend server: `poetry run uvicorn app.main:app --reload --port 8000`
-3.  **Frontend Setup:**
-    *   Navigate to the frontend directory: `cd ../frontend`
-    *   Install dependencies: `npm install`
-    *   Run the frontend development server: `npm run dev` (Usually available at `http://localhost:5173`)
+    *   Access the application at `http://localhost:8000` (Backend serves frontend)
 
 ## Deployment
 
-The application is automatically deployed to Render from the `main` branch.
-
-*   **Deployed URL:** [Insert Deployed URL Here - if available]
+*   **Frontend & Backend:** Both are deployed together to **Render**. The FastAPI backend serves the built frontend static files.
+*   **URL:** `[Render Deploy URL]` (TBD - Stored in `CHATBOT_HOST` GitHub Secret)
 
 ## System Prompt Management
 
-*   **Automatic Update:** The system prompt is automatically updated daily by a GitHub Actions workflow (`.github/workflows/update_prompt.yml`) which crawls the portfolio site defined by the `PORTFOLIO_URL` secret.
-*   **Manual Update:** You can manually trigger the update workflow via the GitHub Actions tab in the repository.
-*   **Check Current Prompt:** You can retrieve the currently active system prompt by sending a GET request to the `/api/prompt/current` endpoint.
-
-See `document.md` for more architectural details. 
+*   **Automatic Update:** The system prompt is automatically updated daily by the `update_prompt.yml` GitHub Actions workflow. This workflow uses the `PORTFOLIO_URL` and `CHATBOT_HOST` secrets to crawl the site and send the updated prompt to the deployed backend API (`/api/prompt/update`) on Render.
+*   **Manual Update:** The `update_prompt.yml` workflow can be triggered manually via the GitHub Actions tab.
+*   **Check Current Prompt:** You can retrieve the currently active system prompt by sending a `GET` request to the `/api/prompt/current` endpoint of the deployed backend: `[Render Deploy URL]/api/prompt/current`.
