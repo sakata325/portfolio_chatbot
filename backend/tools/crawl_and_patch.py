@@ -139,18 +139,18 @@ def fetch_and_prepare_portfolio_content() -> Tuple[Optional[str], Optional[str]]
     try:
         script_path = os.path.abspath(__file__)
         tools_dir = os.path.dirname(script_path)
-        backend_dir = os.path.dirname(tools_dir) # backend/
+        backend_dir = os.path.dirname(tools_dir)  # backend/
         config_path = os.path.join(backend_dir, "app", "prompt_config.py")
 
         if not os.path.exists(config_path):
             # Fallback: Try original location if backend/app doesn't exist
             config_path_orig = os.path.join(backend_dir, "prompt_config.py")
             if os.path.exists(config_path_orig):
-                 config_path = config_path_orig
+                config_path = config_path_orig
             else:
-                 raise FileNotFoundError(
+                raise FileNotFoundError(
                     f"prompt_config.py not found at {config_path} or {config_path_orig}"
-                 )
+                )
 
         spec = importlib.util.spec_from_file_location("prompt_config", config_path)
         if spec is None or spec.loader is None:
@@ -162,7 +162,7 @@ def fetch_and_prepare_portfolio_content() -> Tuple[Optional[str], Optional[str]]
 
     except Exception as e:
         print(f"Error loading prompt_config.py: {e}", file=sys.stderr)
-        return None, None # Fail gracefully
+        return None, None  # Fail gracefully
     # --- Dynamically load prompt_config --- END
 
     if not prompt_template:
@@ -210,7 +210,7 @@ def fetch_and_prepare_portfolio_content() -> Tuple[Optional[str], Optional[str]]
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}", file=sys.stderr)
-        return None, None # Fail gracefully
+        return None, None  # Fail gracefully
 
     if not all_html_content:
         print("Error: Failed to retrieve any HTML content.", file=sys.stderr)
@@ -224,7 +224,10 @@ def fetch_and_prepare_portfolio_content() -> Tuple[Optional[str], Optional[str]]
     # Calculate hash based on the extracted content
     content_for_hash = combined_portfolio_text.strip()
     current_content_hash = get_hash(content_for_hash)
-    print(f"Combined text length: {len(content_for_hash)}, Content Hash: {current_content_hash}")
+    print(
+        f"Combined text length: {len(content_for_hash)}, "
+        f"Content Hash: {current_content_hash}"
+    )
 
     # Construct the final prompt string using the loaded template
     final_prompt_string = prompt_template.format(portfolio_content=content_for_hash)
@@ -243,9 +246,7 @@ def main() -> None:
     try:
         script_path = os.path.abspath(__file__)
         tools_dir = os.path.dirname(script_path)
-        backend_dir_dynamic = os.path.dirname(
-            tools_dir
-        )
+        backend_dir_dynamic = os.path.dirname(tools_dir)
         config_path = os.path.join(backend_dir_dynamic, "prompt_config.py")
 
         if not os.path.exists(config_path):

@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from ..models import PromptResponse, PromptUpdate
 from ..prompt_store import prompt_store
 
-router = APIRouter()
+router: APIRouter = APIRouter()
 
 
 @router.patch("/prompt/update", status_code=200)

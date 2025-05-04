@@ -64,12 +64,13 @@ app.add_middleware(
 )
 
 # Include routers later
-app.include_router(chat.router, prefix="/api") # type: ignore
-app.include_router(prompt.router, prefix="/api") # type: ignore
+app.include_router(chat.router, prefix="/api")
+app.include_router(prompt.router, prefix="/api")
+
 
 # --- Startup Event Handler --- START
 @app.on_event("startup")
-def startup_event():
+def startup_event() -> None:
     print("--- Running startup prompt update logic ---")
     try:
         new_prompt, current_hash = fetch_and_prepare_portfolio_content()
@@ -86,9 +87,9 @@ def startup_event():
             else:
                 print("Content has not changed. Using existing prompt.")
         elif last_hash:
-             print("Failed to fetch content, but previous hash exists.")
+            print("Failed to fetch content, but previous hash exists.")
         else:
-             print("Failed to fetch content and no previous hash found. ")
+            print("Failed to fetch content and no previous hash found. ")
 
     except Exception as e:
         print(f"Error during startup prompt update: {e}", file=sys.stderr)

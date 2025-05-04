@@ -3,13 +3,12 @@ from typing import Dict, List, Optional
 import google.genai as genai
 from fastapi import APIRouter, HTTPException
 from google.genai import errors as google_genai_errors
-from google.genai import types
 
 from ..main import chat_histories
 from ..models import ChatRequest, ChatResponse
 from ..prompt_store import prompt_store
 
-router = APIRouter()
+router: APIRouter = APIRouter()
 
 client: Optional[genai.Client] = None
 try:
@@ -45,19 +44,17 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
             print("Warning: System prompt from prompt_store is empty. Using a default.")
             current_system_prompt = "あなたは親切なアシスタントです。"
 
-        config = types.GenerationConfig(
-        )
-
         response = await client.aio.models.generate_content(
             model=f"models/{model_name}",
             contents=contents_for_api,
-            config=config,
         )
 
         reply_text = ""
-        if (response.candidates and
-                response.candidates[0].content and
-                response.candidates[0].content.parts):
+        if (
+            response.candidates
+            and response.candidates[0].content
+            and response.candidates[0].content.parts
+        ):
             reply_text = response.candidates[0].content.parts[0].text or ""
         elif response.prompt_feedback and response.prompt_feedback.block_reason:
             block_reason_str = response.prompt_feedback.block_reason.name
@@ -93,11 +90,13 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
 
     if reply_text:
         model_response_message = {"role": "model", "parts": reply_text}
-        chat_histories[session_id] = (
-            session_history + [current_user_message, model_response_message]
-        )
+        chat_histories[session_id] = session_history + [
+            current_user_message,
+            model_response_message,
+        ]
     else:
-        print(f"No valid reply generated for session {session_id}"
-              "history not updated.")
+        print(
+            f"No valid reply generated for session {session_id}" "history not updated."
+        )
 
     return ChatResponse(reply=reply_text, session_id=session_id)
