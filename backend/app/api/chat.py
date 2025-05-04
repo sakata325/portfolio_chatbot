@@ -4,9 +4,9 @@ import google.genai as genai
 from fastapi import APIRouter, HTTPException
 from google.genai import errors as google_genai_errors
 
-from ..main import chat_histories
 from ..models import ChatRequest, ChatResponse
 from ..prompt_store import prompt_store
+from ..state import chat_histories
 
 router: APIRouter = APIRouter()
 

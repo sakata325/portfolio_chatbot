@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict, List, Union
+from typing import Dict, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -19,8 +19,6 @@ from tools.crawl_and_patch import (
 load_dotenv()
 
 app = FastAPI(title="Portfolio ChatBot")
-
-chat_histories: Dict[str, List[Dict[str, str]]] = {}
 
 current_file_path = os.path.abspath(__file__)
 app_dir_path = os.path.dirname(current_file_path)
