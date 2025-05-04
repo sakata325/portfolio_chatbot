@@ -134,9 +134,7 @@ def main() -> None:
     try:
         script_path = os.path.abspath(__file__)
         tools_dir = os.path.dirname(script_path)
-        backend_dir_dynamic = os.path.dirname(
-            tools_dir
-        )
+        backend_dir_dynamic = os.path.dirname(tools_dir)
         config_path = os.path.join(backend_dir_dynamic, "prompt_config.py")
 
         if not os.path.exists(config_path):

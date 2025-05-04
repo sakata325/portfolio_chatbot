@@ -1,16 +1,25 @@
 from datetime import datetime
+from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 
+class ChatMessage(BaseModel):
+    """Represents a single message in the chat history."""
+
+    role: str  # 'user' or 'model'
+    content: str
+
+
 class ChatRequest(BaseModel):
-    user_id: UUID = Field(default_factory=uuid4)
     message: str
+    session_id: Optional[str] = None  # Use string for session ID for flexibility
 
 
 class ChatResponse(BaseModel):
-    reply: str
+    message: str
+    session_id: str
 
 
 class PromptUpdate(BaseModel):

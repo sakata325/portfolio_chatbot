@@ -1,12 +1,13 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import google.genai as genai
 from fastapi import APIRouter, HTTPException
 from google.genai import errors as google_genai_errors
 from google.genai import types
 
-from ..models import ChatRequest, ChatResponse
+from ..models import ChatMessage, ChatRequest, ChatResponse
 from ..prompt_store import prompt_store
+from ..session_manager import session_manager
 
 router = APIRouter()
 
@@ -15,6 +16,14 @@ try:
     client = genai.Client()
 except Exception as e:
     print(f"Fatal: Error initializing Google GenAI Client at startup: {e}")
+
+
+def format_history_for_gemini(history: List[ChatMessage]) -> List[Dict[str, Any]]:
+    """Convert our ChatMessage history to Google GenAI format."""
+    formatted_content = []
+    for msg in history:
+        formatted_content.append({"role": msg.role, "parts": [{"text": msg.content}]})
+    return formatted_content
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -28,6 +37,17 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
             ),
         )
 
+    # Get or create a session
+    session_id = session_manager.get_or_create_session(req.session_id)
+
+    # Get history for this session
+    history = session_manager.get_history(session_id)
+
+    # Format history for API + add current message
+    formatted_history = format_history_for_gemini(history)
+    # Add current user message
+    formatted_history.append({"role": "user", "parts": [{"text": req.message}]})
+
     model_name = "gemini-2.0-flash"
 
     try:
@@ -38,7 +58,7 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
 
         response = await client.aio.models.generate_content(
             model=f"models/{model_name}",
-            contents=req.message,
+            contents=formatted_history,  # Use formatted history with current message
             config=config,
         )
 
@@ -57,6 +77,10 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
                 ).strip()
                 print(f"Response generated no content. Finish Reason: {finish_reason}")
 
+        # Add the messages to history AFTER successful API call
+        session_manager.add_message(session_id, "user", req.message)
+        session_manager.add_message(session_id, "model", reply_text)
+
     except google_genai_errors.APIError as e:
         print(f"Google GenAI API Error: {e}")
         raise HTTPException(
@@ -68,4 +92,4 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
             status_code=500, detail="予期せぬ内部エラーが発生しました。"
         )
 
-    return ChatResponse(reply=reply_text)
+    return ChatResponse(message=reply_text, session_id=session_id)
