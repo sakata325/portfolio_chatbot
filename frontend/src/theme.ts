@@ -1,9 +1,7 @@
 import { createTheme } from '@mui/material/styles';
-// PaletteOptions と Palette はモジュール拡張で暗黙的に参照されるため import 不要な場合もある
 
-// Augment the Palette interface
-declare module '@mui/material/styles' { // Corrected module path
-  interface Palette { // No extends needed
+declare module '@mui/material/styles' {
+  interface Palette {
     chat?: {
       toggleButtonBg?: string;
       toggleButtonHoverBg?: string;
@@ -21,8 +19,8 @@ declare module '@mui/material/styles' { // Corrected module path
       inputFocusBorder?: string;
     };
   }
-  // Augment the PaletteOptions interface
-  interface PaletteOptions { // No extends needed
+
+  interface PaletteOptions {
     chat?: {
       toggleButtonBg?: string;
       toggleButtonHoverBg?: string;
@@ -47,29 +45,22 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#000000', // Keep black background
-      // Adjust paper for message bubbles if needed globally, or handle in component
-      paper: 'rgba(30, 30, 30, 0.7)', // Example: Darker semi-transparent paper
+      default: '#000000',
+      paper: 'rgba(30, 30, 30, 0.7)', 
     },
     text: {
-      primary: '#FFFFFF', // White primary text
-      secondary: '#B0B0B0', // Light grey secondary text
-    },
-    primary: {
-      main: '#90caf9', // Example: Light blue for accents (adjust as needed)
-    },
-    secondary: {
-      main: '#f48fb1', // Example: Pink accent (adjust as needed)
+      primary: '#FFFFFF', 
+      secondary: '#B0B0B0', 
     },
     // Add chat specific colors
     chat: {
       // Toggle Button
       toggleButtonBg: 'rgba(0, 0, 0, 0.8)',
       toggleButtonHoverBg: 'rgba(0, 0, 0, 0.6)',
-      // Send Button - Use toggle button colors now (definitions removed)
-      sendButtonDisabledBg: '#757575', // Keep specific disabled style
-      sendButtonDisabledIcon: 'rgba(255, 255, 255, 0.5)', // Keep specific disabled style
-      iconColor: '#FFFFFF', // Added general icon color
+      // Send Button
+      sendButtonDisabledBg: '#757575', 
+      sendButtonDisabledIcon: 'rgba(255, 255, 255, 0.5)',
+      iconColor: '#FFFFFF', 
       // Message Bubbles
       userBg: '#333333', // Dark grey for user
       userText: '#FFFFFF', // White text for user
@@ -82,27 +73,15 @@ const theme = createTheme({
       inputHoverBorder: 'rgba(0, 0, 0, 0.4)',
       inputFocusBorder: 'rgba(0, 0, 0, 0.6)',
     },
-    // Define other colors if needed
   },
   typography: {
-    fontFamily: 'sans-serif', // Simple sans-serif font
-    // Adjust default font sizes if needed (MUI defaults might be okay)
+    fontFamily: 'sans-serif',
     h6: {
       fontSize: '1.1rem',
     },
     body1: {
       fontSize: '0.9rem',
     },
-  },
-  components: {
-    // Example: Style buttons if needed
-    // MuiButton: {
-    //   styleOverrides: {
-    //     root: {
-    //       color: '#000000', // Black text on white button
-    //     },
-    //   },
-    // },
   },
 });
 

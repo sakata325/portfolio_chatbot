@@ -15,7 +15,7 @@ async def update_prompt(p: PromptUpdate) -> Dict[str, str]:
 
     try:
         prompt_store.update(p.text)
-        print("Prompt updated successfully.")  # Add a log message
+        print("Prompt updated successfully.")
         return {
             "status": "updated",
             "new_prompt_preview": p.text[:100] + "...",

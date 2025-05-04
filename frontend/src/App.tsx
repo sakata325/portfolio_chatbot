@@ -1,5 +1,5 @@
 import ChatWidget from './components/ChatWidget';
-import './App.css'; // Keep or modify default styles as needed
+import './App.css';
 
 function App() {
   return (

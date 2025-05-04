@@ -7,10 +7,12 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     user_id: UUID = Field(default_factory=uuid4)
     message: str
+    session_id: str
 
 
 class ChatResponse(BaseModel):
     reply: str
+    session_id: str
 
 
 class PromptUpdate(BaseModel):

@@ -1,5 +1,6 @@
 import os
-from typing import Dict, Union
+import sys
+from typing import Dict, List, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -7,34 +8,37 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-# Now import API routers AFTER load_dotenv
 from app.api import chat, prompt
+from app.prompt_store import prompt_store
+from tools.crawl_and_patch import (
+    fetch_and_prepare_portfolio_content,
+    get_last_hash,
+    save_hash,
+)
 
-# Load environment variables FIRST
 load_dotenv()
 
 app = FastAPI(title="Portfolio ChatBot")
 
-# --- Modify Path Calculation --- START
-# Determine the path to the frontend build directory relative to the project root
-# This calculation is now independent of the CWD of the 'uvicorn' command.
-# このファイルの絶対パスを取得
+chat_histories: Dict[str, List[Dict[str, str]]] = {}
+
 current_file_path = os.path.abspath(__file__)
-# app ディレクトリのパス
 app_dir_path = os.path.dirname(current_file_path)
-# backend ディレクトリのパス
 backend_dir_path = os.path.dirname(app_dir_path)
-# プロジェクトのルートディレクトリのパス
+# toolsディレクトリへのパスを取得
+tools_dir_path = os.path.join(backend_dir_path, "tools")
+# backendディレクトリをsys.pathに追加（tools.crawl_and_patchをインポートするため）
+if backend_dir_path not in sys.path:
+    sys.path.insert(0, backend_dir_path)
+# --- backend/app/ を sys.path に追加 --- END
+
+current_file_path = os.path.abspath(__file__)
+app_dir_path = os.path.dirname(current_file_path)
+backend_dir_path = os.path.dirname(app_dir_path)
 project_root_path = os.path.dirname(backend_dir_path)
 
-# プロジェクトルートからの相対パスで frontend/dist を指定
 frontend_dist_path = os.path.join(project_root_path, "frontend", "dist")
-# --- Modify Path Calculation --- END
 
-# --- Add Staticfiles and Root Route --- START
-# Mount the static files directory (frontend/dist) under /assets
-# Note: The path must exist when the server starts. Render build command ensures this.
-# assets ディレクトリも frontend_dist_path を基準にする
 assets_dir_path = os.path.join(frontend_dist_path, "assets")
 if not os.path.exists(assets_dir_path):
     print(f"Warning: Assets directory not found at {assets_dir_path}")
@@ -48,48 +52,58 @@ app.mount("/assets", StaticFiles(directory=assets_dir_path), name="assets")
 origins = [
     "http://localhost:5173",  # Vite default dev port
     "http://127.0.0.1:5173",
-    # Add other origins if needed (e.g., your deployed frontend URL)
     "https://hayatasakataportfolio.studio.site",  # STUDIOサイトのオリジン
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # List of allowed origins
-    allow_credentials=True,  # Allow cookies
-    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers later
-app.include_router(chat.router, prefix="/api")  # Uncomment chat router include
-app.include_router(prompt.router, prefix="/api")  # Uncomment prompt router include
+app.include_router(chat.router, prefix="/api") # type: ignore
+app.include_router(prompt.router, prefix="/api") # type: ignore
+
+# --- Startup Event Handler --- START
+@app.on_event("startup")
+def startup_event():
+    print("--- Running startup prompt update logic ---")
+    try:
+        new_prompt, current_hash = fetch_and_prepare_portfolio_content()
+        last_hash = get_last_hash()
+
+        if new_prompt is not None and current_hash is not None:
+            print(f"Fetched content hash: {current_hash}")
+            print(f"Last saved hash: {last_hash}")
+            if current_hash != last_hash:
+                print("Content changed, updating prompt store...")
+                prompt_store.update(new_prompt)
+                save_hash(current_hash)
+                print(f"Prompt updated and hash {current_hash} saved.")
+            else:
+                print("Content has not changed. Using existing prompt.")
+        elif last_hash:
+             print("Failed to fetch content, but previous hash exists.")
+        else:
+             print("Failed to fetch content and no previous hash found. ")
+
+    except Exception as e:
+        print(f"Error during startup prompt update: {e}", file=sys.stderr)
+
+    print(f"Startup complete. Current prompt in store: '{prompt_store.current[:50]}' ")
+    print("--- Finished startup prompt update logic ---")
 
 
-# --- Modify Root Route --- START
-# Serve index.html for the root path and any other path not caught by
-# API or static files
-# This allows client-side routing to work correctly.
 @app.get("/{full_path:path}", response_model=None)
 async def serve_frontend(full_path: str) -> Union[FileResponse, Dict[str, str]]:
     index_path = os.path.join(frontend_dist_path, "index.html")
-    # Check if the requested path corresponds to an existing static file first
-    # If not, or if it's the root path, serve index.html
-    # (StaticFiles middleware handles existing files automatically if mounted correctly)
-    # A simple approach for now: always serve index.html for non-API routes.
-    # More robust handling might check `os.path.exists` for specific files.
     if not full_path.startswith("api/") and os.path.exists(index_path):
         return FileResponse(index_path)
-    # If index.html doesn't exist or path starts with api/, let other routes handle it
-    # (This part might need adjustment based on how StaticFiles interacts)
-    # Fallback for the original root message if index.html is somehow not found.
     return {
         "message": (
             "Portfolio ChatBot Backend is running, " "but index.html not found."
         )
     }
-
-
-# --- Modify Root Route --- END
-
-# Add basic command for running locally
-# Run with: uvicorn app.main:app --reload --port 8000

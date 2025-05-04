@@ -16,7 +16,6 @@ interface Message {
   sender: 'user' | 'bot';
 }
 
-// Interface matching backend/app/models.py
 interface ChatResponse {
     reply: string;
 }
