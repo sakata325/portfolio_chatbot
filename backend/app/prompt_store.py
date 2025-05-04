@@ -10,5 +10,4 @@ class PromptStore:
         with self._lock:
             self.current = new
 
-
 prompt_store = PromptStore()

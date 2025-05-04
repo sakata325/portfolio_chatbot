@@ -3,7 +3,7 @@ import importlib.util
 import os
 import sys
 from datetime import datetime
-from typing import List, Optional, Set, Tuple
+from typing import List, Set
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -123,118 +123,6 @@ def save_hash(new_hash: str) -> None:
         print(f"Error writing hash file ({HASH_FILE}): {e}", file=sys.stderr)
 
 
-def fetch_and_prepare_portfolio_content() -> Tuple[Optional[str], Optional[str]]:
-    """Crawls portfolio, extracts text, generates prompt string, and calculates hash.
-
-    Returns:
-        Tuple[Optional[str], Optional[str]]: (prompt_string, content_hash)
-            Returns (None, None) if an error occurs.
-    """
-    if not TARGET_URL:
-        print("Error: PORTFOLIO_URL environment variable is not set.", file=sys.stderr)
-        return None, None
-
-    # --- Dynamically load prompt_config --- START
-    prompt_template = ""
-    try:
-        script_path = os.path.abspath(__file__)
-        tools_dir = os.path.dirname(script_path)
-        backend_dir = os.path.dirname(tools_dir)  # backend/
-        config_path = os.path.join(backend_dir, "app", "prompt_config.py")
-
-        if not os.path.exists(config_path):
-            # Fallback: Try original location if backend/app doesn't exist
-            config_path_orig = os.path.join(backend_dir, "prompt_config.py")
-            if os.path.exists(config_path_orig):
-                config_path = config_path_orig
-            else:
-                raise FileNotFoundError(
-                    f"prompt_config.py not found at {config_path} or {config_path_orig}"
-                )
-
-        spec = importlib.util.spec_from_file_location("prompt_config", config_path)
-        if spec is None or spec.loader is None:
-            raise ImportError(f"Could not load spec for {config_path}")
-        prompt_config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(prompt_config)
-        prompt_template = prompt_config.SYSTEM_PROMPT_TEMPLATE
-        print("Prompt configuration loaded successfully.")
-
-    except Exception as e:
-        print(f"Error loading prompt_config.py: {e}", file=sys.stderr)
-        return None, None  # Fail gracefully
-    # --- Dynamically load prompt_config --- END
-
-    if not prompt_template:
-        print("Error: SYSTEM_PROMPT_TEMPLATE could not be loaded.", file=sys.stderr)
-        return None, None
-
-    print("Starting crawl process...")
-    urls_to_visit: Set[str] = {TARGET_URL}
-    visited_urls: Set[str] = set()
-    all_html_content: List[str] = []
-    pages_crawled = 0
-
-    try:
-        # Using sync_playwright as this is a sync function
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-
-            while urls_to_visit and pages_crawled < MAX_CRAWL_PAGES:
-                current_url = urls_to_visit.pop()
-                if current_url in visited_urls:
-                    continue
-
-                print(f"({pages_crawled + 1}/{MAX_CRAWL_PAGES}) Fetch: {current_url}")
-                try:
-                    page.goto(current_url, timeout=60000)
-                    page.wait_for_load_state("networkidle", timeout=60000)
-                    html = page.content()
-                    all_html_content.append(html)
-                    visited_urls.add(current_url)
-                    pages_crawled += 1
-
-                    if pages_crawled < MAX_CRAWL_PAGES:
-                        new_links = get_internal_links(page, current_url)
-                        urls_to_visit.update(new_links - visited_urls)
-
-                except PlaywrightError as e:
-                    print(f"  Playwright error {current_url}: {e}", file=sys.stderr)
-                    # Continue crawling other pages
-                except Exception as e:
-                    print(f"  Unexpected error on {current_url}: {e}", file=sys.stderr)
-                    # Continue crawling
-
-            browser.close()
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}", file=sys.stderr)
-        return None, None  # Fail gracefully
-
-    if not all_html_content:
-        print("Error: Failed to retrieve any HTML content.", file=sys.stderr)
-        return None, None
-
-    print(f"\nExtracting text from {len(all_html_content)} crawled pages...")
-    combined_portfolio_text = "\n\n--- (ページ区切り) ---\n\n".join(
-        [extract_text(html) for html in all_html_content if html]
-    )
-
-    # Calculate hash based on the extracted content
-    content_for_hash = combined_portfolio_text.strip()
-    current_content_hash = get_hash(content_for_hash)
-    print(
-        f"Combined text length: {len(content_for_hash)}, "
-        f"Content Hash: {current_content_hash}"
-    )
-
-    # Construct the final prompt string using the loaded template
-    final_prompt_string = prompt_template.format(portfolio_content=content_for_hash)
-
-    return final_prompt_string, current_content_hash
-
-
 def main() -> None:
     """Main function to crawl, compare hash, and update prompt via API."""
     if not TARGET_URL:
@@ -246,7 +134,9 @@ def main() -> None:
     try:
         script_path = os.path.abspath(__file__)
         tools_dir = os.path.dirname(script_path)
-        backend_dir_dynamic = os.path.dirname(tools_dir)
+        backend_dir_dynamic = os.path.dirname(
+            tools_dir
+        )
         config_path = os.path.join(backend_dir_dynamic, "prompt_config.py")
 
         if not os.path.exists(config_path):

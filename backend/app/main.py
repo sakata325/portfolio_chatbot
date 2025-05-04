@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import Dict, Union
 
 from dotenv import load_dotenv
@@ -8,27 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+# Now import API routers AFTER load_dotenv
 from app.api import chat, prompt
-from app.prompt_store import prompt_store
-from tools.crawl_and_patch import (
-    fetch_and_prepare_portfolio_content,
-    get_last_hash,
-    save_hash,
-)
 
+# Load environment variables FIRST
 load_dotenv()
 
 app = FastAPI(title="Portfolio ChatBot")
-
-current_file_path = os.path.abspath(__file__)
-app_dir_path = os.path.dirname(current_file_path)
-backend_dir_path = os.path.dirname(app_dir_path)
-# toolsディレクトリへのパスを取得
-tools_dir_path = os.path.join(backend_dir_path, "tools")
-# backendディレクトリをsys.pathに追加（tools.crawl_and_patchをインポートするため）
-if backend_dir_path not in sys.path:
-    sys.path.insert(0, backend_dir_path)
-# --- backend/app/ を sys.path に追加 --- END
 
 current_file_path = os.path.abspath(__file__)
 app_dir_path = os.path.dirname(current_file_path)
@@ -64,36 +49,6 @@ app.add_middleware(
 # Include routers later
 app.include_router(chat.router, prefix="/api")
 app.include_router(prompt.router, prefix="/api")
-
-
-# --- Startup Event Handler --- START
-@app.on_event("startup")
-def startup_event() -> None:
-    print("--- Running startup prompt update logic ---")
-    try:
-        new_prompt, current_hash = fetch_and_prepare_portfolio_content()
-        last_hash = get_last_hash()
-
-        if new_prompt is not None and current_hash is not None:
-            print(f"Fetched content hash: {current_hash}")
-            print(f"Last saved hash: {last_hash}")
-            if current_hash != last_hash:
-                print("Content changed, updating prompt store...")
-                prompt_store.update(new_prompt)
-                save_hash(current_hash)
-                print(f"Prompt updated and hash {current_hash} saved.")
-            else:
-                print("Content has not changed. Using existing prompt.")
-        elif last_hash:
-            print("Failed to fetch content, but previous hash exists.")
-        else:
-            print("Failed to fetch content and no previous hash found. ")
-
-    except Exception as e:
-        print(f"Error during startup prompt update: {e}", file=sys.stderr)
-
-    print(f"Startup complete. Current prompt in store: '{prompt_store.current[:50]}' ")
-    print("--- Finished startup prompt update logic ---")
 
 
 @app.get("/{full_path:path}", response_model=None)

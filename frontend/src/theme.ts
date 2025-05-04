@@ -1,7 +1,9 @@
 import { createTheme } from '@mui/material/styles';
+// PaletteOptions と Palette はモジュール拡張で暗黙的に参照されるため import 不要な場合もある
 
-declare module '@mui/material/styles' {
-  interface Palette {
+// Augment the Palette interface
+declare module '@mui/material/styles' { // Corrected module path
+  interface Palette { // No extends needed
     chat?: {
       toggleButtonBg?: string;
       toggleButtonHoverBg?: string;
@@ -19,8 +21,8 @@ declare module '@mui/material/styles' {
       inputFocusBorder?: string;
     };
   }
-
-  interface PaletteOptions {
+  // Augment the PaletteOptions interface
+  interface PaletteOptions { // No extends needed
     chat?: {
       toggleButtonBg?: string;
       toggleButtonHoverBg?: string;
@@ -45,8 +47,9 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#000000',
-      paper: 'rgba(30, 30, 30, 0.7)', 
+      default: '#000000', // Keep black background
+      // Adjust paper for message bubbles if needed globally, or handle in component
+      paper: 'rgba(30, 30, 30, 0.7)', // Example: Darker semi-transparent paper
     },
     text: {
       primary: '#FFFFFF', 
