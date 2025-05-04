@@ -18,6 +18,42 @@ The chatbot is embedded as an iframe and keeps its knowledge up-to-date by perio
 *   **CI/CD:** GitHub Actions
 *   **Deployment:** Render (Hosting both Frontend and Backend)
 
+## Repository
+
+```plaintext
+portfolio_chatbot/
+├── .github/
+│   └── workflows/               # GitHub Actions workflows
+│       ├── ci.yml               # Backend lint/test CI
+│       └── update_prompt.yml    # Prompt auto-update (daily crawl)
+├── backend/
+│   ├── app/                     # Core FastAPI application
+│   │   ├── api/                 # API endpoint definitions
+│   │   │   ├── chat.py          # Chat API (/api/chat)
+│   │   │   └── prompt.py        # Prompt update/retrieve API (/api/prompt/*)
+│   │   ├── models.py            # Pydantic data models
+│   │   ├── prompt_store.py      # Prompt storage (in-memory)
+│   │   ├── session_manager.py   # Chat session management (in-memory)
+│   │   └── main.py              # FastAPI entry point and static file serving
+│   ├── tools/                   # Utility tools
+│   │   └── crawl_and_patch.py   # Portfolio site crawling & prompt-update script
+│   ├── prompt_config.py         # Prompt template configuration
+│   ├── pyproject.toml           # Poetry dependency definitions
+│   └── poetry.lock              # Dependency lock file
+├── frontend/
+│   ├── src/                     # React application source
+│   │   ├── components/          # React components
+│   │   │   └── ChatWidget.tsx   # Chat UI component
+│   │   ├── App.tsx              # Main application component
+│   │   ├── theme.ts             # MUI theme customization (chat colors, etc.)
+│   │   └── main.tsx             # React app entry point
+│   ├── index.html               # HTML entry point
+│   ├── package.json             # npm dependency definitions
+│   └── vite.config.ts           # Vite configuration file
+├── .gitignore                   # Git ignore file
+└── README.md                    # This file
+```
+
 ## Architecture
 
 ```mermaid
@@ -55,14 +91,14 @@ graph TD
     %% ───────────── CI / CD ─────────────
     subgraph CI_CD_GitHub["CI/CD (GitHub Actions)"]
         direction LR
-        CI["ci.yml<br/>(Lint, Test)"]
-        CD_UP["update_prompt.yml<br/>(Daily Crawl)"]
-        Secrets["Secrets<br/>(PORTFOLIO_URL, CHATBOT_HOST)"]
+        CI["ci.yml<br/>(Lint, Test)"]
+        CD_UP["update_prompt.yml<br/>(Daily Crawl)"]
+        Secrets["Secrets<br/>(PORTFOLIO_URL, CHATBOT_HOST)"]
     end
 
     %% ─────────── External Services ───────────
     subgraph External_Services["External Services"]
-        ES_G["Google Gemini API"]
+        ES_G["Google Gemini API"]
         ES_P["Portfolio Site<br/>(STUDIO)"]
     end
 
@@ -76,7 +112,7 @@ graph TD
 
     CD_UP -- "Run" --> B_TOOL
     B_TOOL -- "Fetch content" --> ES_P
-    B_TOOL -- "Update prompt<br/>(via CHATBOT_HOST)" --> B_API
+    B_TOOL -- "Update prompt<br/>(via CHATBOT_HOST)" --> B_API
     B_API -- "Update prompt" --> B_PS
     CD_UP -- "Use" --> Secrets
 ```
