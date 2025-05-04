@@ -1,6 +1,7 @@
 # Portfolio-ChatBot
 
-This project implements a chatbot for a portfolio website hosted on STUDIO.<https://hayatasakataportfolio.studio.site/>
+This project implements a chatbot for a portfolio website hosted on STUDIO.
+<https://hayatasakataportfolio.studio.site/>
 The chatbot is embedded as an iframe and keeps its knowledge up-to-date by periodically crawling the portfolio site.
 
 ## Features
