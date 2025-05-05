@@ -1,8 +1,9 @@
-[English](#Portfolio‑ChatBot) | [日本語](#ポートフォリオ‑チャットボット)
+<a href="README.md#english" data-pjax="0">English</a> |
+<a href="README.md#japanese" data-pjax="0">日本語</a>
 
----
-<br><br>
-# Portfolio‑ChatBot
+<h2 id="english"></h2>
+
+# Portfolio-ChatBot
 
 **Solo side‑project** — A chatbot that lives inside my online portfolio  
 (<https://hayatasakataportfolio.studio.site/>) and keeps itself **always up‑to‑date** by crawling the page daily.
@@ -160,11 +161,11 @@ graph TD
 
 - MIT License
 
----
 
-<br><br><br>
+<h2 id="japanese"></h2>
+<br><br>
 
-# ポートフォリオ‑チャットボット
+# Portfolio-chatbot
 
 **個人プロジェクト** — オンラインポートフォリオ  
 （<https://hayatasakataportfolio.studio.site/>）内に組み込まれたチャットボットで、毎日サイトをクロールして**常に最新の情報**を提供します。
