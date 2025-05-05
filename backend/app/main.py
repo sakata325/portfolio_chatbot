@@ -7,10 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-# Now import API routers AFTER load_dotenv
 from app.api import chat, prompt
 
-# Load environment variables FIRST
 load_dotenv()
 
 app = FastAPI(title="Portfolio ChatBot")
@@ -35,7 +33,7 @@ app.mount("/assets", StaticFiles(directory=assets_dir_path), name="assets")
 origins = [
     "http://localhost:5173",  # Vite default dev port
     "http://127.0.0.1:5173",
-    "https://hayatasakataportfolio.studio.site",  # STUDIOサイトのオリジン
+    "https://hayatasakataportfolio.studio.site",  # STUDIO site
 ]
 
 app.add_middleware(
@@ -46,7 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers later
+
 app.include_router(chat.router, prefix="/api")
 app.include_router(prompt.router, prefix="/api")
 

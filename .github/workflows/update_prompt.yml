@@ -33,5 +33,5 @@ jobs:
         env:
           PORTFOLIO_URL: ${{ secrets.PORTFOLIO_URL }} # From GitHub Secrets
           CHATBOT_HOST: ${{ secrets.CHATBOT_HOST }}   # From GitHub Secrets
-          # GOOGLE_API_KEY is not directly needed by the script itself
+
         run: poetry run python tools/crawl_and_patch.py 

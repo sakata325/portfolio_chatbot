@@ -12,18 +12,14 @@ from dotenv import load_dotenv
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page, sync_playwright
 
-# Load environment variables from .env file in the backend directory
-# Assuming the script is run from the root or backend directory
+
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(dotenv_path=os.path.join(backend_dir, ".env"))
 
-# Clean up sys.path if necessary, though usually fine for scripts
-
 API_URL = os.getenv("CHATBOT_HOST", "http://localhost:8000") + "/api/prompt/update"
 TARGET_URL = os.getenv("PORTFOLIO_URL")
-# Place hash file in the same directory as the script for simplicity
 HASH_FILE = os.path.join(os.path.dirname(__file__), "last_hash.txt")
-MAX_CRAWL_PAGES = 20  # Define max pages to crawl
+MAX_CRAWL_PAGES = 20
 
 
 def is_same_domain(base_url: str, new_url: str) -> bool:
@@ -33,7 +29,7 @@ def is_same_domain(base_url: str, new_url: str) -> bool:
         new_domain = urlparse(new_url).netloc
         return base_domain == new_domain
     except ValueError:
-        return False  # Handle potential invalid URLs
+        return False
 
 
 def get_internal_links(page: Page, base_url: str) -> Set[str]:
@@ -44,24 +40,20 @@ def get_internal_links(page: Page, base_url: str) -> Set[str]:
 
     hrefs = page.eval_on_selector_all(
         "a[href]", "elements => elements.map(el => el.href)"
-    )  # noqa: E501
+    )
 
     for href in hrefs:
         try:
-            # Construct absolute URL
             absolute_url = urljoin(base_url, href)
             parsed_url = urlparse(absolute_url)
 
-            # Check if it's http/https, has a domain, and matches the base domain
             if (
                 parsed_url.scheme in ["http", "https"]
                 and parsed_url.netloc == base_domain
             ):
-                # Remove fragment (#...) and query parameters (?...) for simplicity
                 clean_url = urljoin(absolute_url, parsed_url.path)
                 links.add(clean_url)
         except ValueError:
-            # Ignore invalid URLs
             continue
     return links
 
@@ -177,10 +169,8 @@ def main() -> None:
                     visited_urls.add(current_url)
                     pages_crawled += 1
 
-                    # Find new internal links on the current page
                     if pages_crawled < MAX_CRAWL_PAGES:
                         new_links = get_internal_links(page, current_url)
-                        # Add only new, unvisited links to the queue
                         urls_to_visit.update(new_links - visited_urls)
 
                 except PlaywrightError as e:
@@ -199,12 +189,11 @@ def main() -> None:
         sys.exit(1)
 
     print(f"\nExtracting text from {len(all_html_content)} crawled pages...")
-    # Combine text from all pages, separate by a clear marker
+
     combined_portfolio_text = "\n\n--- (ページ区切り) ---\n\n".join(
         [extract_text(html) for html in all_html_content if html]
     )
 
-    # --- Text Length Check ---
     print(f"Total combined text length: {len(combined_portfolio_text)}")
 
     print("Reading prompt template from loaded config...")
@@ -217,7 +206,6 @@ def main() -> None:
         )
         sys.exit(1)
 
-    # Calculate hash based ONLY on portfolio content now
     print("Calculating hash based on portfolio content...")
     content_for_hash = combined_portfolio_text.strip()
     current_hash = get_hash(content_for_hash)
@@ -232,12 +220,13 @@ def main() -> None:
         return
 
     print("Change detected. Constructing new prompt...")
-    # Construct the final prompt using the template, only formatting portfolio_content
+
     new_prompt = system_template.format(
         portfolio_content=combined_portfolio_text.strip()
     )
 
     print(f"Updating prompt via API: {API_URL}")
+
     if update_prompt_api(new_prompt):
         print(f"Saving new hash: {current_hash}")
         save_hash(current_hash)

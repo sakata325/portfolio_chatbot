@@ -11,25 +11,24 @@ import SendIcon from '@mui/icons-material/Send';
 import { useTheme } from '@mui/material/styles';
 
 interface Message {
-  id: number; // Or string if using UUIDs on frontend too
+  id: number;
   text: string;
   sender: 'user' | 'bot';
 }
 
-// Interface matching backend/app/models.py (Updated)
 interface ChatResponse {
-  message: string; // Changed from reply
+  message: string;
   session_id: string;
 }
 
-const SESSION_STORAGE_KEY = 'chatSessionId'; // Key for sessionStorage
+const SESSION_STORAGE_KEY = 'chatSessionId';
 
 const ChatWidget: React.FC = () => {
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null); // State to hold session ID
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   // Load session ID from sessionStorage on initial mount
@@ -38,13 +37,10 @@ const ChatWidget: React.FC = () => {
     if (storedSessionId) {
       setSessionId(storedSessionId);
       console.log("Loaded session ID:", storedSessionId);
-      // Optionally, you could fetch history here if backend supports it
-      // For now, just start with the initial bot message
       setMessages([{ id: Date.now(), text: 'こんにちは！私について何でも聞いてください。', sender: 'bot' }]);
     } else {
-       // No existing session, start with the initial bot message
       setMessages([{ id: Date.now(), text: 'こんにちは！私について何でも聞いてください。', sender: 'bot' }]);
-       console.log("No session ID found, starting fresh.");
+      console.log("No session ID found, starting fresh.");
     }
   }, []);
 
@@ -55,27 +51,24 @@ const ChatWidget: React.FC = () => {
     }, 100);
   }, [messages]);
 
-  // Removed initial bot message from here, handled in session ID load effect
-
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
-    const userMessageText = inputValue; // Store text before clearing input
+    const userMessageText = inputValue;
     const userMessage: Message = { id: Date.now(), text: userMessageText, sender: 'user' };
-    setMessages(prev => [...prev, userMessage]); // Add user message immediately
+    setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
     try {
       const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/chat`;
 
-      // Get current session ID from state
       const currentSessionId = sessionId;
-      console.log("Sending with session ID:", currentSessionId); // Log session ID being sent
+      console.log("Sending with session ID:", currentSessionId);
 
       const requestBody = {
         message: userMessageText,
-        session_id: currentSessionId, // Send null if no session yet
+        session_id: currentSessionId,
       };
 
       const response = await fetch(apiUrl, {
@@ -92,24 +85,20 @@ const ChatWidget: React.FC = () => {
         throw new Error(errorData.detail || `HTTP error ${response.status}`);
       }
 
-      // Expecting { message: string, session_id: string } from backend
       const data: ChatResponse = await response.json();
 
-      // Store/Update session ID
       if (data.session_id && data.session_id !== currentSessionId) {
         console.log("Received new/updated session ID:", data.session_id);
         sessionStorage.setItem(SESSION_STORAGE_KEY, data.session_id);
-        setSessionId(data.session_id); // Update state
+        setSessionId(data.session_id);
       } else if (!sessionId && data.session_id) {
-         // Handle the case where it was the first request and we got a session ID back
-         console.log("Received first session ID:", data.session_id);
-         sessionStorage.setItem(SESSION_STORAGE_KEY, data.session_id);
-         setSessionId(data.session_id); // Update state
+        console.log("Received first session ID:", data.session_id);
+        sessionStorage.setItem(SESSION_STORAGE_KEY, data.session_id);
+        setSessionId(data.session_id);
       }
 
-
       const botResponse: Message = { id: Date.now() + 1, text: data.message, sender: 'bot' };
-      setMessages(prev => [...prev, botResponse]); // Add bot response
+      setMessages(prev => [...prev, botResponse]);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -147,7 +136,7 @@ const ChatWidget: React.FC = () => {
           <List sx={{ pt: 0, pb: 0 }}>
             {messages.map((msg) => (
               <ListItem
-                  key={msg.id} // Ensure unique keys
+                  key={msg.id}
                   sx={{
                       justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                       px: 0,
@@ -191,8 +180,8 @@ const ChatWidget: React.FC = () => {
             flexShrink: 0,
             p: 1.5,
             display: 'flex',
-            alignItems: 'flex-end', // Align items to bottom for multiline
-            backgroundColor: 'transparent', // Ensure input area bg is transparent
+            alignItems: 'flex-end',
+            backgroundColor: 'transparent',
         }}>
            <TextField
             variant="outlined"
@@ -201,29 +190,28 @@ const ChatWidget: React.FC = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for newline
+              if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSendMessage();
               }
             }}
             disabled={isLoading}
             multiline
-            maxRows={3} // Limit expansion
+            maxRows={3}
             sx={{
               flexGrow: 1,
               mr: 1,
               '& .MuiOutlinedInput-root': {
                 borderRadius: '20px',
-                backgroundColor: theme.palette.chat?.inputBg ?? '#ffffff', // Provide default
+                backgroundColor: theme.palette.chat?.inputBg ?? '#ffffff',
                 '& fieldset': { borderColor: theme.palette.chat?.inputBorder ?? '#ced4da' },
                 '&:hover fieldset': { borderColor: theme.palette.chat?.inputHoverBorder ?? '#adb5bd' },
                 '&.Mui-focused fieldset': { borderColor: theme.palette.chat?.inputFocusBorder ?? theme.palette.primary.main },
               },
               '& .MuiInputBase-input': {
                  color: theme.palette.chat?.inputText ?? '#212529',
-                 // Add scrollbar for multiline input if needed
                  overflowY: 'auto',
-                 maxHeight: 'calc(1.4375em * 3)', // Matches maxRows approx.
+                 maxHeight: 'calc(1.4375em * 3)',
                  scrollbarWidth: 'thin',
                  '&::-webkit-scrollbar': {
                      width: '6px',
@@ -241,18 +229,18 @@ const ChatWidget: React.FC = () => {
             sx={{
                bgcolor: theme.palette.chat?.toggleButtonBg ?? theme.palette.primary.main,
                color: theme.palette.chat?.iconColor ?? '#fff',
-               border: 'none', // Added explicitly
-               boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)', // Added explicitly
+               border: 'none',
+               boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
               '&:hover': {
-                bgcolor: theme.palette.chat?.toggleButtonHoverBg ?? theme.palette.primary.dark, // Provide default hover
+                bgcolor: theme.palette.chat?.toggleButtonHoverBg ?? theme.palette.primary.dark,
               },
               '&.Mui-disabled': {
                   backgroundColor: theme.palette.chat?.sendButtonDisabledBg ?? '#e0e0e0',
                   color: theme.palette.chat?.sendButtonDisabledIcon ?? '#bdbdbd',
               },
                width: 40,
-               height: 40, // Match TextField height when small
-               alignSelf: 'flex-end', // Ensure button stays at bottom
+               height: 40,
+               alignSelf: 'flex-end',
             }}
           >
             <SendIcon fontSize="small"/>

@@ -3,9 +3,6 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* color-scheme: light dark; */ /* Remove default color scheme handling */
-  /* color: rgba(255, 255, 255, 0.87); */ /* Let MUI handle text color */
-  /* background-color: #242424; */ /* Remove default background */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,34 +10,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Remove anchor styling if not needed or handled by MUI */
-/* a { ... } */
-/* a:hover { ... } */
 
 html, body {
   margin: 0;
-  padding: 0; /* Ensure no padding */
+  padding: 0;
   width: 100%;
   height: 100%;
-  background-color: transparent !important; /* Set transparent background */
+  background-color: transparent !important;
 }
-
-body {
-  /* Remove styles potentially interfering with MUI layout */
-  /* display: flex; */
-  /* place-items: center; */
-  /* min-width: 320px; */
-  /* min-height: 100vh; */ /* Let MUI/React handle height */
-}
-
-/* Remove h1 styling if handled by MUI */
-/* h1 { ... } */
-
-/* Remove default button styling */
-/* button { ... } */
-/* button:hover { ... } */
-/* button:focus, */
-/* button:focus-visible { ... } */
-
-/* Remove prefers-color-scheme block */
-/* @media (prefers-color-scheme: light) { ... } */
