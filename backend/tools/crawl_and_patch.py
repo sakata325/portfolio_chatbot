@@ -87,7 +87,7 @@ def update_prompt_api(prompt_text: str) -> bool:
     try:
         headers = {"Content-Type": "application/json"}
         response = requests.patch(
-            API_URL, json={"text": prompt_text}, headers=headers, timeout=15
+            API_URL, json={"text": prompt_text}, headers=headers, timeout=60
         )
         response.raise_for_status()
         print(
