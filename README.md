@@ -6,7 +6,7 @@
 # Portfolio-ChatBot
 
 **Solo side‑project** — A chatbot that lives inside my online portfolio  
-(<https://hayatasakataportfolio.studio.site/>) and keeps itself **always up‑to‑date** by crawling the page daily.
+(<https://hayatasakataportfolio.studio.site/>) and keeps itself **always up‑to‑date** by crawling the page weekly.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](#license)  
 
@@ -153,7 +153,7 @@ graph TD
 
 ## 🤖 System Prompt Lifecycle
 
-1. **Daily Action** runs `crawl_and_patch.py`.
+1. **Weekly Action** runs `crawl_and_patch.py`.
 2. New HTML → new prompt → `/api/prompt/update` → in‑memory store hot‑swaps.
 3. Manual re‑run possible from the Actions tab.
 
@@ -164,9 +164,9 @@ graph TD
 # Portfolio-chatbot
 
 **個人プロジェクト** — オンラインポートフォリオ  
-（<https://hayatasakataportfolio.studio.site/>）内に組み込まれたチャットボットで、毎日サイトをクロールして**常に最新の情報**を提供します。
+（<https://hayatasakataportfolio.studio.site/>）内に組み込まれたチャットボットで、毎週サイトをクロールして**常に最新の情報**を提供します。
 
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](#license)  
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 
 <p align="center">
   <a href="https://hayatasakataportfolio.studio.site/" target="_blank"><strong>▶︎ 今すぐ試す!</strong></a>
@@ -265,7 +265,7 @@ graph TD
     subgraph CI_CD_GitHub["CI/CD (GitHub Actions)"]
         direction LR
         CI["ci.yml<br/>(リント、テスト)"]
-        CD_UP["update_prompt.yml<br/>(毎日クロール)"]
+        CD_UP["update_prompt.yml<br/>(週次クロール)"]
         Secrets["シークレット<br/>(PORTFOLIO_URL, CHATBOT_HOST)"]
     end
 
