@@ -157,10 +157,6 @@ graph TD
 2. New HTML → new prompt → `/api/prompt/update` → in‑memory store hot‑swaps.
 3. Manual re‑run possible from the Actions tab.
 
-## 📜 License
-
-- MIT License
-
 
 <h2 id="japanese"></h2>
 <br><br>
@@ -318,7 +314,3 @@ graph TD
 1. **日次アクション**が`crawl_and_patch.py`を実行。
 2. 新しいHTML → 新しいプロンプト → `/api/prompt/update` → メモリ内ストアがホットスワップ。
 3. Actionsタブから手動での再実行も可能。
-
-## 📜 ライセンス
-
-- MITライセンス

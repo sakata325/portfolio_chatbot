@@ -2,8 +2,7 @@ name: Update Prompt from Portfolio
 
 on:
   schedule:
-    # Run once a day at 3:00 UTC
-    - cron: '0 3 * * *'
+    - cron: '0 3 * * 0' # Sunday at 3:00 UTC
   workflow_dispatch: # Allows manual triggering from the Actions tab
 
 jobs:
