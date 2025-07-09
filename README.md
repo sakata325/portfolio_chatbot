@@ -8,8 +8,6 @@
 **Solo side‑project** — A chatbot that lives inside my online portfolio  
 (<https://hayatasakataportfolio.studio.site/>) and keeps itself **always up‑to‑date** by crawling the page weekly.
 
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](#license)  
-
 <p align="center">
   <a href="https://hayatasakataportfolio.studio.site/" target="_blank"><strong>▶︎ Try it now!</strong></a>
 </p>
@@ -165,8 +163,6 @@ graph TD
 
 **個人プロジェクト** — オンラインポートフォリオ  
 （<https://hayatasakataportfolio.studio.site/>）内に組み込まれたチャットボットで、毎週サイトをクロールして**常に最新の情報**を提供します。
-
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 
 <p align="center">
   <a href="https://hayatasakataportfolio.studio.site/" target="_blank"><strong>▶︎ 今すぐ試す!</strong></a>
